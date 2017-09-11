@@ -61,7 +61,7 @@ void serial::send(type id, const payload& data)
                          : is_sysex(id) ? sizeof(word)
                                         : sizeof(byte))
     );
-    message.push_back(asio::buffer(data));
+    if(data.size()) message.push_back(asio::buffer(data));
     if(is_sysex(id)) message.push_back(asio::buffer(&end_sysex, sizeof(byte)));
 
     asio::write(port_, message);

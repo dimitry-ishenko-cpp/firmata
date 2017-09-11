@@ -62,7 +62,7 @@ class base
 {
 public:
     ////////////////////
-    virtual void send(type, const payload&) = 0;
+    virtual void send(type, const payload& = { }) = 0;
     virtual std::tuple<type, payload> recv() = 0;
 };
 
@@ -102,7 +102,7 @@ public:
     void set(stop_bits);
     void set(char_size);
 
-    virtual void send(type, const payload&) override;
+    virtual void send(type, const payload& = { }) override;
     virtual std::tuple<type, payload> recv() override;
 
 private:
