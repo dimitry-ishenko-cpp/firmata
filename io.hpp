@@ -53,6 +53,8 @@ enum type : dword
 
 using payload = std::vector<byte>;
 
+std::string to_string(payload::const_iterator begin, payload::const_iterator end);
+
 ////////////////////////////////////////////////////////////////////////////////
 namespace io
 {
