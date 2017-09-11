@@ -20,15 +20,8 @@ namespace firmata
 std::string to_string(payload::const_iterator begin, payload::const_iterator end)
 {
     std::string s;
-    while(begin < std::prev(end))
-    {
-        auto byte = *begin;
-        ++begin;
-        byte += *begin << 8;
-        ++begin;
-
-        s += char(byte);
-    }
+    for(auto pos = begin; pos < std::prev(end); ++pos)
+        s += char(*pos + (*(++pos) << 7));
     return s;
 }
 
