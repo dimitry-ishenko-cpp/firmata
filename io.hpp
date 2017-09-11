@@ -49,6 +49,7 @@ constexpr bool is_ext_sysex(type id) noexcept
 ////////////////////////////////////////////////////////////////////////////////
 enum type : dword
 {
+    query_firmware = sysex(0x79),
 };
 
 using payload = std::vector<byte>;
