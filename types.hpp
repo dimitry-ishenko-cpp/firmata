@@ -20,16 +20,17 @@ namespace firmata
 {
 
 ////////////////////////////////////////////////////////////////////////////////
+// basic types
 using  byte = std::uint8_t;
 using  word = std::uint16_t;
 using dword = std::uint32_t;
 
+////////////////////////////////////////////////////////////////////////////////
 enum type : dword;
 
 constexpr byte start_sysex = 0xf0;
 constexpr byte end_sysex = 0xf7;
 
-////////////////////////////////////////////////////////////////////////////////
 constexpr type sysex(byte id) noexcept
 { return static_cast<type>(dword(start_sysex) + (dword(id) << 8)); }
 
@@ -42,8 +43,7 @@ constexpr type ext_sysex(word id) noexcept
 constexpr bool is_ext_sysex(type id) noexcept
 { return is_sysex(id) && 0 == ((id >> 8) & 0xff); }
 
-////////////////////////////////////////////////////////////////////////////////
-// message type, which includes message id,
+// message type includes message id,
 // and optional sysex id and extended id
 enum type : dword
 {
@@ -56,12 +56,16 @@ enum type : dword
     fw_reply    = fw_query,
 };
 
+// get message size based on whether
+// itsa standard, sysex or extended sysex message
 constexpr auto size(type id) noexcept
 { return is_ext_sysex(id) ? sizeof(dword) : is_sysex(id) ? sizeof(word) : sizeof(byte); }
 
 ////////////////////////////////////////////////////////////////////////////////
+// message data
 using payload = std::vector<byte>;
 
+// convert 7-bit message data to string
 std::string to_string(payload::const_iterator begin, payload::const_iterator end);
 
 ////////////////////////////////////////////////////////////////////////////////
