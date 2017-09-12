@@ -89,6 +89,9 @@ namespace literals
 using pos = byte;
 constexpr pos invalid = -1;
 
+// pin type
+enum type { digital, analog };
+
 // pin mode
 enum mode : byte
 {
