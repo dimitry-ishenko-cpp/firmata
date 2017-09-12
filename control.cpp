@@ -18,13 +18,13 @@ control::control(io::base* io) : io_(io)
 {
     ////////////////////
     // get version and firmware
-    io_->send(query_firmware);
+    io_->send(fw_query);
 
     type id;
     payload data;
 
     do { std::tie(id, data) = io_->recv(); }
-    while(id != query_firmware);
+    while(id != fw_reply);
 
     version_ = std::make_tuple(data[0], data[1]);
     firmware_ = to_string(data.begin() + 2, data.end());
