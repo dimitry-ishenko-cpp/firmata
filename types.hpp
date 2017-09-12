@@ -47,16 +47,16 @@ constexpr bool is_ext_sysex(type id) noexcept
 // and optional sysex id and extended id
 enum type : dword
 {
-    ver_query   = 0xf9,
-    ver_reply   = ver_query,
+    version_query           = 0xf9,
+    version_response        = version_query,
 
-    reset       = 0xff,
+    reset                   = 0xff,
 
-    caps_query  = sysex(0x6b),
-    caps_reply  = sysex(0x6c),
+    capabilities_query      = sysex(0x6b),
+    capabilities_response   = sysex(0x6c),
 
-    fw_query    = sysex(0x79),
-    fw_reply    = fw_query,
+    firmware_query          = sysex(0x79),
+    firmware_response       = firmware_query,
 };
 
 // get message size based on whether

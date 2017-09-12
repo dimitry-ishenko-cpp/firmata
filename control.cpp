@@ -18,16 +18,16 @@ control::control(io::base* io) : io_(io)
 {
     ////////////////////
     // get version and firmware
-    io_->send(fw_query);
-    payload data = get(fw_reply);
+    io_->send(firmware_query);
+    payload data = get(firmware_response);
 
     version_ = std::make_tuple(data[0], data[1]);
     firmware_ = to_string(data.begin() + 2, data.end());
 
     ////////////////////
     // get capabilities
-    io_->send(caps_query);
-    data = get(caps_reply);
+    io_->send(capabilities_query);
+    data = get(capabilities_response);
 
     firmata::pos pos = 0;
     firmata::pin pin(pos);
