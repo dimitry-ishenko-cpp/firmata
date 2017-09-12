@@ -35,19 +35,24 @@ public:
     void swap(pin& other) noexcept
     {
         using std::swap;
-        swap(pos_,   other.pos_  );
-        swap(modes_, other.modes_);
+        swap(digital_, other.digital_);
+        swap(analog_,  other.analog_ );
+        swap(modes_,   other.modes_  );
     }
 
     ////////////////////
-    auto pos() const noexcept { return pos_; }
+    firmata::pos pos(type n) const noexcept;
+
+    auto const& modes() const noexcept { return modes_; }
+    bool supports(mode n) const noexcept { return modes_.count(n); }
 
 private:
     ////////////////////
-    firmata::pos pos_ = invalid;
+    firmata::pos digital_ = invalid, analog_ = invalid;
     firmata::modes modes_;
 
-    explicit pin(firmata::pos pos) noexcept : pos_(pos) { }
+    ////////////////////
+    pin() noexcept = default;
     friend class control;
 };
 
