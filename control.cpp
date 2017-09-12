@@ -19,12 +19,7 @@ control::control(io::base* io) : io_(io)
     ////////////////////
     // get version and firmware
     io_->send(fw_query);
-
-    type id;
-    payload data;
-
-    do { std::tie(id, data) = io_->recv(); }
-    while(id != fw_reply);
+    payload data = get(fw_reply);
 
     version_ = std::make_tuple(data[0], data[1]);
     firmware_ = to_string(data.begin() + 2, data.end());
@@ -41,6 +36,18 @@ void control::reset()
 {
     io_->send(firmata::reset);
     query_state();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+payload control::get(type reply_id)
+{
+    type id;
+    payload data;
+
+    do { std::tie(id, data) = io_->recv(); }
+    while(id != reply_id);
+
+    return data;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

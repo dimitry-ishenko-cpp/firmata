@@ -39,6 +39,10 @@ private:
     std::tuple<int, int> version_ { 0, 0 };
     std::string firmware_;
 
+    ////////////////////
+    // get specific type of reply discarding others
+    payload get(type);
+
     void query_state();
 };
 
