@@ -30,6 +30,7 @@ public:
     auto const& firmware() const { return firmware_; }
 
     ////////////////////
+    void reset();
 
 private:
     ////////////////////
@@ -37,6 +38,8 @@ private:
 
     std::tuple<int, int> version_ { 0, 0 };
     std::string firmware_;
+
+    void query_state();
 };
 
 
