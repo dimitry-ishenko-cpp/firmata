@@ -32,8 +32,18 @@ public:
     auto const& version() const { return version_; }
     auto const& firmware() const { return firmware_; }
 
-    ////////////////////
     void reset();
+
+    ////////////////////
+    auto pins() const noexcept { return pins_.size(); }
+
+    auto const& pin(pos n) const { return pins_.at(n); }
+    auto& pin(pos n) { return pins_.at(n); }
+
+    auto analogs() const noexcept { return analogs_.size(); }
+
+    auto const& analog(pos n) const { return *analogs_.at(n); }
+    auto& analog(pos n) { return *analogs_.at(n); }
 
 private:
     ////////////////////
