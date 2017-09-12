@@ -12,7 +12,10 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 #include "firmata/io.hpp"
+#include "firmata/pin.hpp"
+
 #include <tuple>
+#include <vector>
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace firmata
@@ -38,6 +41,8 @@ private:
 
     std::tuple<int, int> version_ { 0, 0 };
     std::string firmware_;
+
+    std::vector<pin> pins_;
 
     ////////////////////
     // get specific type of reply discarding others

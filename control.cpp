@@ -25,7 +25,22 @@ control::control(io::base* io) : io_(io)
     firmware_ = to_string(data.begin() + 2, data.end());
 
     ////////////////////
-    //
+    // get capabilities
+    io_->send(caps_query);
+    data = get(caps_reply);
+
+    firmata::pos pos = 0;
+    firmata::pin pin(pos);
+
+    for(auto ci = data.begin(); ci < data.end(); ++ci)
+    {
+        if(*ci == 0x7f)
+        {
+            pins_.push_back(std::move(pin));
+            pin = firmata::pin(++pos);
+        }
+        else pin.modes_.emplace(static_cast<mode>(*ci), static_cast<res>(*++ci));
+    }
 
     ////////////////////
     query_state();
