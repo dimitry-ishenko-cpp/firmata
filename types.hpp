@@ -52,6 +52,9 @@ enum type : dword
 
     reset                   = 0xff,
 
+    analog_map_query        = sysex(0x69),
+    analog_map_response     = sysex(0x6a),
+
     capabilities_query      = sysex(0x6b),
     capabilities_response   = sysex(0x6c),
 
