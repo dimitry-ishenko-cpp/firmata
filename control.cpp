@@ -108,6 +108,17 @@ void control::query_analog_map()
 ////////////////////////////////////////////////////////////////////////////////
 void control::query_state()
 {
+    for(auto& pin : pins_)
+    {
+        io_->send(pin_state_query, { pin.pos(digital) });
+        auto data = get(pin_state_response);
+
+        assert(data.size() >= 3);
+        assert(data[0] == pin.pos(digital));
+
+        pin.mode_ = static_cast<mode>(data[1]);
+        pin.state_ = to_value(data.begin() + 2, data.end());
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
