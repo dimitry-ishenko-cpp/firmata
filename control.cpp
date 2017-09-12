@@ -29,17 +29,18 @@ control::control(io::base* io) : io_(io)
     io_->send(capabilities_query);
     data = get(capabilities_response);
 
+    firmata::pin pin;
     firmata::pos pos = 0;
-    firmata::pin pin(pos);
-
     for(auto ci = data.begin(); ci < data.end(); ++ci)
     {
         if(*ci == 0x7f)
         {
+            pin.digital_ = pos;
             pins_.push_back(std::move(pin));
-            pin = firmata::pin(++pos);
+
+            pin = firmata::pin(); ++pos;
         }
-        else pin.modes_.emplace(static_cast<mode>(*ci), static_cast<res>(*++ci));
+        else pin.modes_.emplace(mode(*ci), res(*++ci));
     }
 
     ////////////////////
