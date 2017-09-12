@@ -52,6 +52,9 @@ enum type : dword
 
     reset       = 0xff,
 
+    caps_query  = sysex(0x6b),
+    caps_reply  = sysex(0x6c),
+
     fw_query    = sysex(0x79),
     fw_reply    = fw_query,
 };
@@ -77,6 +80,31 @@ namespace literals
     constexpr bits operator"" _bits(unsigned long long n) noexcept
     { return static_cast<bits>(n); }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// pin number
+using pos = byte;
+constexpr pos invalid = -1;
+
+// pin mode
+enum mode : byte
+{
+    digital_in  =  0,
+    digital_out =  1,
+    analog_in   =  2,
+    pwm         =  3,
+    servo       =  4,
+    shift       =  5,
+    i2c         =  6,
+    onewire     =  7,
+    stepper     =  8,
+    encoder     =  9,
+    serial      = 10,
+    pullup_in   = 11,
+};
+
+// mode resolution
+using res = bits;
 
 ////////////////////////////////////////////////////////////////////////////////
 }
