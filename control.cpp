@@ -63,7 +63,6 @@ void control::query_capabilities()
     firmata::pin pin;
     firmata::pos pos = 0;
     for(auto ci = data.begin(); ci < data.end(); ++ci)
-    {
         if(*ci == 0x7f)
         {
             pin.digital_ = pos;
@@ -71,8 +70,11 @@ void control::query_capabilities()
 
             pin = firmata::pin(); ++pos;
         }
-        else pin.modes_.emplace(mode(*ci), res(*++ci));
-    }
+        else
+        {
+            pin.modes_.insert(mode(*ci));
+            pin.reses_.emplace(mode(*ci), res(*++ci));
+        }
 
     assert(pin.modes_.empty());
 }

@@ -12,14 +12,13 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 #include "firmata/types.hpp"
+
 #include <map>
+#include <set>
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace firmata
 {
-
-////////////////////////////////////////////////////////////////////////////////
-using modes = std::map<mode, res>;
 
 ////////////////////////////////////////////////////////////////////////////////
 class pin
@@ -38,6 +37,7 @@ public:
         swap(digital_, other.digital_);
         swap(analog_,  other.analog_ );
         swap(modes_,   other.modes_  );
+        swap(reses_,   other.reses_  );
     }
 
     ////////////////////
@@ -49,7 +49,10 @@ public:
 private:
     ////////////////////
     firmata::pos digital_ = invalid, analog_ = invalid;
-    firmata::modes modes_;
+
+    std::set<firmata::mode> modes_;
+    // resolution for each mode
+    std::map<firmata::mode, firmata::res> reses_;
 
     ////////////////////
     pin() noexcept = default;
