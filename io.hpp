@@ -49,6 +49,9 @@ constexpr bool is_ext_sysex(type id) noexcept
 ////////////////////////////////////////////////////////////////////////////////
 enum type : dword
 {
+    ver_query   = 0xf9,
+    ver_reply   = ver_query,
+
     reset       = 0xff,
 
     fw_query    = sysex(0x79),
