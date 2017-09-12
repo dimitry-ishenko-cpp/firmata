@@ -8,6 +8,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 #include "firmata/control.hpp"
+#include <algorithm>
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace firmata
@@ -18,6 +19,7 @@ control::control(io::base* io) : io_(io)
 {
     query_firmware();
     query_capabilities();
+    query_analog_map();
     query_state();
 }
 
@@ -73,6 +75,32 @@ void control::query_capabilities()
     }
 
     assert(pin.modes_.empty());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void control::query_analog_map()
+{
+    io_->send(analog_map_query);
+    auto data = get(analog_map_response);
+
+    pos size = 0;
+    analogs_.resize(pins_.size(), pins_.end());
+
+    auto pi = pins_.begin();
+    for(auto ci = data.begin(); ci < data.end(); ++ci, ++pi)
+        if(*ci != 0x7f)
+        {
+            assert(pi < pins_.end());
+            assert(*ci < analogs_.size());
+
+            pi->analog_ = *ci;
+            analogs_[*ci] = pi;
+
+            size = std::max(size, *ci);
+        }
+
+    analogs_.resize(size);
+    for(auto pi : analogs_) assert(pi != pins_.end());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

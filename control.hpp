@@ -42,7 +42,11 @@ private:
     std::tuple<int, int> version_ { 0, 0 };
     std::string firmware_;
 
-    std::vector<pin> pins_;
+    std::vector<firmata::pin> pins_;
+
+    // analog to digital pin mapping
+    using iterator = decltype(pins_)::iterator;
+    std::vector<iterator> analogs_;
 
     ////////////////////
     // get specific reply discarding others
@@ -50,6 +54,7 @@ private:
 
     void query_firmware();
     void query_capabilities();
+    void query_analog_map();
     void query_state();
 };
 
