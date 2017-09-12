@@ -58,6 +58,9 @@ enum msg_id : dword
     capabilities_query      = sysex(0x6b),
     capabilities_response   = sysex(0x6c),
 
+    pin_state_query         = sysex(0x6d),
+    pin_state_response      = sysex(0x6e),
+
     firmware_query          = sysex(0x79),
     firmware_response       = firmware_query,
 };
