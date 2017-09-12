@@ -37,22 +37,36 @@ public:
         swap(digital_, other.digital_);
         swap(analog_,  other.analog_ );
         swap(modes_,   other.modes_  );
+        swap(mode_,    other.mode_   );
         swap(reses_,   other.reses_  );
+        swap(value_,   other.value_  );
+        swap(state_,   other.state_  );
     }
 
     ////////////////////
     firmata::pos pos(type n) const noexcept;
 
     auto const& modes() const noexcept { return modes_; }
-    bool supports(mode n) const noexcept { return modes_.count(n); }
+    bool supports(firmata::mode n) const noexcept { return modes_.count(n); }
+
+    auto mode() const noexcept { return mode_; }
+    auto res() const noexcept { return reses_.at(mode_); }
+
+    auto value() const noexcept { return value_; }
+    auto state() const noexcept { return state_; }
 
 private:
     ////////////////////
     firmata::pos digital_ = invalid, analog_ = invalid;
 
     std::set<firmata::mode> modes_;
+    firmata::mode mode_;
+
     // resolution for each mode
     std::map<firmata::mode, firmata::res> reses_;
+
+    int value_ = 0;
+    int state_ = 0;
 
     ////////////////////
     pin() noexcept = default;
