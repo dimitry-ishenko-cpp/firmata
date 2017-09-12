@@ -8,24 +8,11 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 #include "firmata/io.hpp"
-
 #include <asio.hpp>
-#include <iterator>
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace firmata
 {
-
-////////////////////////////////////////////////////////////////////////////////
-std::string to_string(payload::const_iterator begin, payload::const_iterator end)
-{
-    std::string s;
-    for(auto pos = begin; pos < std::prev(end); ++pos)
-        s += char(*pos + (*(++pos) << 7));
-    return s;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 namespace io
 {
 
@@ -69,13 +56,11 @@ void serial::send(type id, const payload& data)
 {
     std::vector<asio::const_buffer> message;
 
-    message.push_back(asio::buffer(&id,
-        is_ext_sysex(id) ? sizeof(dword)
-                         : is_sysex(id) ? sizeof(word)
-                                        : sizeof(byte))
-    );
-    if(data.size()) message.push_back(asio::buffer(data));
-    if(is_sysex(id)) message.push_back(asio::buffer(&end_sysex, sizeof(byte)));
+        message.push_back(asio::buffer(&id, size(id)));
+    if(data.size())
+        message.push_back(asio::buffer(data));
+    if(is_sysex(id))
+        message.push_back(asio::buffer(&end_sysex, sizeof(end_sysex)));
 
     asio::write(port_, message);
 }

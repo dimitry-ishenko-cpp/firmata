@@ -11,58 +11,16 @@
 #define FIRMATA_IO_HPP
 
 ////////////////////////////////////////////////////////////////////////////////
+#include "firmata/types.hpp"
+
 #include <asio/io_service.hpp>
 #include <asio/serial_port.hpp>
-#include <cstdint>
 #include <string>
 #include <tuple>
-#include <vector>
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace firmata
 {
-
-////////////////////////////////////////////////////////////////////////////////
-using  byte = std::uint8_t;
-using  word = std::uint16_t;
-using dword = std::uint32_t;
-
-enum type : dword;
-
-constexpr byte start_sysex = 0xf0;
-constexpr byte end_sysex = 0xf7;
-constexpr byte ext_id = 0x00;
-
-////////////////////////////////////////////////////////////////////////////////
-constexpr type sysex(byte id) noexcept
-{ return static_cast<type>(dword(start_sysex) + (dword(id) << 8)); }
-
-constexpr bool is_sysex(type id) noexcept
-{ return byte(id & 0xff) == start_sysex; }
-
-constexpr type ext_sysex(word id) noexcept
-{ return static_cast<type>(dword(start_sysex) + (dword(ext_id) << 8) + (dword(id) << 16)); }
-
-constexpr bool is_ext_sysex(type id) noexcept
-{ return is_sysex(id) && byte((id >> 8) & 0xff) == ext_id; }
-
-////////////////////////////////////////////////////////////////////////////////
-enum type : dword
-{
-    ver_query   = 0xf9,
-    ver_reply   = ver_query,
-
-    reset       = 0xff,
-
-    fw_query    = sysex(0x79),
-    fw_reply    = fw_query,
-};
-
-using payload = std::vector<byte>;
-
-std::string to_string(payload::const_iterator begin, payload::const_iterator end);
-
-////////////////////////////////////////////////////////////////////////////////
 namespace io
 {
 
