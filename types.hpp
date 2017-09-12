@@ -77,6 +77,9 @@ using payload = std::vector<byte>;
 // convert 7-bit message data to string
 std::string to_string(payload::const_iterator begin, payload::const_iterator end);
 
+// convert 7-bit message data to value
+int to_value(payload::const_iterator begin, payload::const_iterator end);
+
 ////////////////////////////////////////////////////////////////////////////////
 // number of bits (eg, resolution, etc.)
 enum bits : byte { };
