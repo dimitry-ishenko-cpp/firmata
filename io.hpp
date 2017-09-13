@@ -29,8 +29,8 @@ class base
 {
 public:
     ////////////////////
-    virtual void send(msg_id, const payload& = { }) = 0;
-    virtual std::tuple<msg_id, payload> recv() = 0;
+    virtual void write(msg_id, const payload& = { }) = 0;
+    virtual std::tuple<msg_id, payload> read() = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -60,8 +60,8 @@ public:
     void set(stop_bits);
     void set(char_size);
 
-    virtual void send(msg_id, const payload& = { }) override;
-    virtual std::tuple<msg_id, payload> recv() override;
+    virtual void write(msg_id, const payload& = { }) override;
+    virtual std::tuple<msg_id, payload> read() override;
 
 private:
     ////////////////////

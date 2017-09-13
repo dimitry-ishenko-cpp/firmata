@@ -30,7 +30,7 @@ control::control(io::base* io) : io_(io)
 ////////////////////////////////////////////////////////////////////////////////
 void control::reset()
 {
-    io_->send(firmata::reset);
+    io_->write(firmata::reset);
     query_state();
 }
 
@@ -40,7 +40,7 @@ payload control::get(msg_id reply_id)
     msg_id id;
     payload data;
 
-    do { std::tie(id, data) = io_->recv(); }
+    do { std::tie(id, data) = io_->read(); }
     while(id != reply_id);
 
     return data;
@@ -49,7 +49,7 @@ payload control::get(msg_id reply_id)
 ////////////////////////////////////////////////////////////////////////////////
 void control::query_firmware()
 {
-    io_->send(firmware_query);
+    io_->write(firmware_query);
     auto data = get(firmware_response);
 
     assert(data.size() >= 2);
@@ -61,7 +61,7 @@ void control::query_firmware()
 ////////////////////////////////////////////////////////////////////////////////
 void control::query_capability()
 {
-    io_->send(capability_query);
+    io_->write(capability_query);
     auto data = get(capability_response);
 
     firmata::pin pin;
@@ -89,7 +89,7 @@ void control::query_capability()
 ////////////////////////////////////////////////////////////////////////////////
 void control::query_analog_mapping()
 {
-    io_->send(analog_mapping_query);
+    io_->write(analog_mapping_query);
     auto data = get(analog_mapping_response);
 
     firmata::pos max = 0;
@@ -121,7 +121,7 @@ void control::query_state()
 {
     for(auto& pin : pins_)
     {
-        io_->send(pin_state_query, { pin.pos(digital) });
+        io_->write(pin_state_query, { pin.pos(digital) });
         auto data = get(pin_state_response);
 
         assert(data.size() >= 3);
