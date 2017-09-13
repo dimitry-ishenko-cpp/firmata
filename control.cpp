@@ -86,23 +86,23 @@ void control::query_analog_map()
     auto data = get(analog_map_response);
 
     pos size = 0;
-    analogs_.resize(pins_.size(), pins_.end());
+    analog_.resize(pins_.size(), pins_.end());
 
     auto pi = pins_.begin();
     for(auto ci = data.begin(); ci < data.end(); ++ci, ++pi)
         if(*ci != 0x7f)
         {
             assert(pi < pins_.end());
-            assert(*ci < analogs_.size());
+            assert(*ci < analog_.size());
 
             pi->analog_ = *ci;
-            analogs_[*ci] = pi;
+            analog_[*ci] = pi;
 
             size = std::max(size, *ci);
         }
 
-    analogs_.resize(size);
-    for(auto pi : analogs_) assert(pi != pins_.end());
+    analog_.resize(size);
+    for(auto pi : analog_) assert(pi != pins_.end());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -35,15 +35,15 @@ public:
     void reset();
 
     ////////////////////
-    auto pins() const noexcept { return pins_.size(); }
+    auto pin_count() const noexcept { return pins_.size(); }
 
     auto const& pin(pos n) const { return pins_.at(n); }
     auto& pin(pos n) { return pins_.at(n); }
 
-    auto analogs() const noexcept { return analogs_.size(); }
+    auto analog_count() const noexcept { return analog_.size(); }
 
-    auto const& analog(pos n) const { return *analogs_.at(n); }
-    auto& analog(pos n) { return *analogs_.at(n); }
+    auto const& analog(pos n) const { return *analog_.at(n); }
+    auto& analog(pos n) { return *analog_.at(n); }
 
 private:
     ////////////////////
@@ -54,9 +54,9 @@ private:
 
     std::vector<firmata::pin> pins_;
 
-    // analog to digital pin mapping
+    // analog to digital pin map
     using iterator = decltype(pins_)::iterator;
-    std::vector<iterator> analogs_;
+    std::vector<iterator> analog_;
 
     ////////////////////
     // get specific reply discarding others
