@@ -76,8 +76,11 @@ void control::query_capability()
         }
         else
         {
-            pin.modes_.insert(mode(*ci));
-            pin.reses_.emplace(mode(*ci), res(*++ci));
+            auto mode = static_cast<firmata::mode>(*ci);
+            auto res = static_cast<firmata::res>(*++ci);
+
+            pin.modes_.insert(mode);
+            pin.reses_.emplace(mode, res);
         }
 
     assert(pin.modes_.empty());
@@ -89,23 +92,27 @@ void control::query_analog_mapping()
     io_->send(analog_mapping_query);
     auto data = get(analog_mapping_response);
 
-    pos size = 0;
+    firmata::pos max = 0;
     analog_.resize(pins_.size(), pins_.end());
 
     auto pi = pins_.begin();
     for(auto ci = data.begin(); ci < data.end(); ++ci, ++pi)
-        if(*ci != 0x7f)
+    {
+        auto pos = *ci;
+        if(pos != 0x7f)
         {
             assert(pi < pins_.end());
-            assert(*ci < analog_.size());
+            assert(pos < analog_.size());
 
-            pi->analog_ = *ci;
-            analog_[*ci] = pi;
+            pi->analog_ = pos;
+            analog_[pos] = pi;
 
-            size = std::max(size, *ci);
+            max = std::max(max, pos);
         }
+    }
 
-    analog_.resize(size);
+    analog_.resize(max);
+
     for(auto pi : analog_) assert(pi != pins_.end());
 }
 
