@@ -35,7 +35,7 @@ void control::reset()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-payload control::get(msg_id reply_id)
+payload control::read(msg_id reply_id)
 {
     msg_id id;
     payload data;
@@ -50,7 +50,7 @@ payload control::get(msg_id reply_id)
 void control::query_firmware()
 {
     io_->write(firmware_query);
-    auto data = get(firmware_response);
+    auto data = read(firmware_response);
 
     assert(data.size() >= 2);
 
@@ -62,7 +62,7 @@ void control::query_firmware()
 void control::query_capability()
 {
     io_->write(capability_query);
-    auto data = get(capability_response);
+    auto data = read(capability_response);
 
     firmata::pin pin;
     firmata::pos pos = 0;
@@ -90,7 +90,7 @@ void control::query_capability()
 void control::query_analog_mapping()
 {
     io_->write(analog_mapping_query);
-    auto data = get(analog_mapping_response);
+    auto data = read(analog_mapping_response);
 
     firmata::pos max = 0;
     analog_.resize(pins_.size(), pins_.end());
@@ -122,7 +122,7 @@ void control::query_state()
     for(auto& pin : pins_)
     {
         io_->write(pin_state_query, { pin.pos(digital) });
-        auto data = get(pin_state_response);
+        auto data = read(pin_state_response);
 
         assert(data.size() >= 3);
         assert(data[0] == pin.pos(digital));
