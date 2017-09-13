@@ -18,8 +18,8 @@ namespace firmata
 control::control(io::base* io) : io_(io)
 {
     query_firmware();
-    query_capabilities();
-    query_analog_map();
+    query_capability();
+    query_analog_mapping();
     query_state();
 }
 
@@ -55,10 +55,10 @@ void control::query_firmware()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::query_capabilities()
+void control::query_capability()
 {
-    io_->send(capabilities_query);
-    auto data = get(capabilities_response);
+    io_->send(capability_query);
+    auto data = get(capability_response);
 
     firmata::pin pin;
     firmata::pos pos = 0;
@@ -80,10 +80,10 @@ void control::query_capabilities()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::query_analog_map()
+void control::query_analog_mapping()
 {
-    io_->send(analog_map_query);
-    auto data = get(analog_map_response);
+    io_->send(analog_mapping_query);
+    auto data = get(analog_mapping_response);
 
     pos size = 0;
     analog_.resize(pins_.size(), pins_.end());

@@ -63,8 +63,8 @@ private:
     payload get(msg_id);
 
     void query_firmware();
-    void query_capabilities();
-    void query_analog_map();
+    void query_capability();
+    void query_analog_mapping();
     void query_state();
 };
 

@@ -50,22 +50,41 @@ constexpr bool is_ext_sysex(msg_id id) noexcept
 // as well as optional sysex id and extended id
 enum msg_id : dword
 {
-    version_query           = 0xf9,
-    version_response        = version_query,
+    port_value_base         = 0x90,
+    port_value_end          = 0x9f + 1,
 
+    report_analog_base      = 0xc0,
+    report_analog_end       = 0xcf + 1,
+
+    report_port_base        = 0xd0,
+    report_port_end         = 0xdf + 1,
+
+    analog_value_base       = 0xe0,
+    analog_value_end        = 0xef + 1,
+
+    pin_mode                = 0xf4,
+    digital_value           = 0xf5,
+
+    version                 = 0xf9,
     reset                   = 0xff,
 
-    analog_map_query        = sysex(0x69),
-    analog_map_response     = sysex(0x6a),
+    analog_mapping_query    = sysex(0x69),
+    analog_mapping_response = sysex(0x6a),
 
-    capabilities_query      = sysex(0x6b),
-    capabilities_response   = sysex(0x6c),
+    capability_query        = sysex(0x6b),
+    capability_response     = sysex(0x6c),
 
     pin_state_query         = sysex(0x6d),
     pin_state_response      = sysex(0x6e),
 
+    analog_value            = sysex(0x6f),
+
+    string_data             = sysex(0x71),
+
     firmware_query          = sysex(0x79),
     firmware_response       = firmware_query,
+
+    sample_rate             = sysex(0x7a),
 };
 
 // get message size based on whether
