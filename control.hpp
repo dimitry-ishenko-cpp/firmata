@@ -66,6 +66,9 @@ private:
     void query_capability();
     void query_analog_mapping();
     void query_state();
+
+    // for debugging
+    void info();
 };
 
 

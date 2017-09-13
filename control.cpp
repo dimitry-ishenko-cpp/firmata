@@ -8,7 +8,9 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 #include "firmata/control.hpp"
+
 #include <algorithm>
+#include <iostream>
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace firmata
@@ -21,6 +23,8 @@ control::control(io::base* io) : io_(io)
     query_capability();
     query_analog_mapping();
     query_state();
+
+    //info();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -118,6 +122,61 @@ void control::query_state()
 
         pin.mode_ = static_cast<mode>(data[1]);
         pin.state_ = to_value(data.begin() + 2, data.end());
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+namespace
+{
+
+auto to_string(firmata::mode mode)
+{
+    switch(mode)
+    {
+    case digital_in : return "digital_in" ;
+    case digital_out: return "digital_out";
+    case analog_in  : return "analog_in"  ;
+    case pwm        : return "pwm"        ;
+    case servo      : return "servo"      ;
+    case shift      : return "shift"      ;
+    case i2c        : return "i2c"        ;
+    case onewire    : return "onewire"    ;
+    case stepper    : return "stepper"    ;
+    case encoder    : return "encoder"    ;
+    case serial     : return "serial"     ;
+    case pullup_in  : return "pullup_in"  ;
+    default         : return "UNKNOWN"    ;
+    };
+}
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void control::info()
+{
+    using namespace std;
+
+    int major, minor;
+    std::tie(major, minor) = version();
+    cout << "FIRMWARE: " << firmware() << " " << major << "." << minor << endl;
+
+    for(auto n = 0; n < pin_count(); ++n)
+    {
+        cout << "PIN" << endl;
+        auto& pin = this->pin(n);
+
+        cout << "  digital: " << (int)pin.pos(digital) << endl;
+        if(pin.pos(firmata::analog) != invalid)
+            cout << "  analog: " << (int)pin.pos(firmata::analog) << endl;
+
+        cout << "  mode: " << to_string(pin.mode()) << endl;
+        cout << "  res: " << pin.res() << endl;
+
+        cout << "  modes: ";
+        for(auto mode : pin.modes()) cout << to_string(mode) << " ";
+        cout << endl;
+
+        cout << "  state: " << pin.state() << endl;
     }
 }
 
