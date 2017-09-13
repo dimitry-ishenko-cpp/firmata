@@ -25,6 +25,9 @@ using  byte = std::uint8_t;
 using  word = std::uint16_t;
 using dword = std::uint32_t;
 
+constexpr bool on = true;
+constexpr bool off = false;
+
 ////////////////////////////////////////////////////////////////////////////////
 enum msg_id : dword;
 
