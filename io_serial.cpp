@@ -7,7 +7,7 @@
 // For full terms see COPYING or visit https://www.gnu.org/licenses/gpl.html
 
 ////////////////////////////////////////////////////////////////////////////////
-#include "firmata/io.hpp"
+#include "firmata/io_serial.hpp"
 
 #include <asio.hpp>
 #include <thread>
