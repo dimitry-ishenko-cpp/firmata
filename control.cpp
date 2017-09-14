@@ -130,11 +130,11 @@ void control::query_state()
 {
     for(auto& pin : pins_)
     {
-        io_->write(pin_state_query, { pin.pos(digital) });
+        io_->write(pin_state_query, { pin.digital() });
         auto data = read_until(pin_state_response);
 
         assert(data.size() >= 3);
-        assert(data[0] == pin.pos(digital));
+        assert(data[0] == pin.digital());
 
         pin.mode_ = static_cast<mode>(data[1]);
         pin.state_ = to_value(data.begin() + 2, data.end());
@@ -181,9 +181,8 @@ void control::info()
         cout << "PIN" << endl;
         auto& pin = this->pin(n);
 
-        cout << "  digital: " << int(pin.pos(digital)) << endl;
-        if(pin.pos(firmata::analog) != npos)
-            cout << "  analog: " << int(pin.pos(firmata::analog)) << endl;
+        cout << "  digital: " << int(pin.digital()) << endl;
+        if(pin.analog() != npos) cout << "  analog: " << int(pin.analog()) << endl;
 
         cout << "  mode: " << to_string(pin.mode()) << endl;
         cout << "  res: " << pin.res() << endl;

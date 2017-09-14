@@ -44,7 +44,8 @@ public:
     }
 
     ////////////////////
-    firmata::pos pos(type n) const noexcept;
+    firmata::pos digital() const noexcept { return digital_; }
+    firmata::pos analog() const noexcept { return analog_; }
 
     auto const& modes() const noexcept { return modes_; }
     bool supports(firmata::mode n) const noexcept { return modes_.count(n); }
