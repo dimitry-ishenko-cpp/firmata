@@ -14,7 +14,6 @@
 #include "firmata/io.hpp"
 #include "firmata/pin.hpp"
 
-#include <tuple>
 #include <vector>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -29,7 +28,6 @@ public:
     explicit control(io::base*);
 
     ////////////////////
-    auto const& version() const { return version_; }
     auto const& firmware() const { return firmware_; }
 
     void reset();
@@ -44,8 +42,7 @@ private:
     ////////////////////
     io::base* io_;
 
-    std::tuple<int, int> version_ { 0, 0 };
-    std::string firmware_;
+    firmata::firmware firmware_;
 
     std::vector<firmata::pin> digital_;
 

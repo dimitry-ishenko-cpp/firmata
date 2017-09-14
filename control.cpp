@@ -63,8 +63,9 @@ void control::query_firmware()
 
     assert(data.size() >= 2);
 
-    version_ = std::make_tuple(data[0], data[1]);
-    firmware_ = to_string(data.begin() + 2, data.end());
+    firmware_.major = data[0];
+    firmware_.minor = data[1];
+    firmware_.name = to_string(data.begin() + 2, data.end());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -172,9 +173,10 @@ void control::info()
 {
     using namespace std;
 
-    int major, minor;
-    std::tie(major, minor) = version();
-    cout << "FIRMWARE: " << firmware() << " " << major << "." << minor << endl;
+    cout << "FIRMWARE: "
+         << firmware().name  << " "
+         << firmware().major << "." << firmware().minor
+         << endl;
 
     for(auto n = 0; n < pin_count(); ++n)
     {
