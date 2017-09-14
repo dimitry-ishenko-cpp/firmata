@@ -45,8 +45,8 @@ private:
     std::vector<pin> pins_;
 
     ////////////////////
-    // get specific type of reply discarding others
-    payload get(type);
+    // get specific reply discarding others
+    payload get(msg_id);
 
     void query_state();
 };

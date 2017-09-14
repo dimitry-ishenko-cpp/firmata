@@ -52,7 +52,7 @@ void serial::set(char_size bits)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void serial::send(type id, const payload& data)
+void serial::send(msg_id id, const payload& data)
 {
     std::vector<asio::const_buffer> message;
 
@@ -66,9 +66,9 @@ void serial::send(type id, const payload& data)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::tuple<type, payload> serial::recv()
+std::tuple<msg_id, payload> serial::recv()
 {
-    type id;
+    msg_id id;
     payload message;
 
     // get message id

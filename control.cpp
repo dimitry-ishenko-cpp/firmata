@@ -54,9 +54,9 @@ void control::reset()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-payload control::get(type reply_id)
+payload control::get(msg_id reply_id)
 {
-    type id;
+    msg_id id;
     payload data;
 
     do { std::tie(id, data) = io_->recv(); }

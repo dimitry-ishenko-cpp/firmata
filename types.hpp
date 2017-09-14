@@ -26,26 +26,26 @@ using  word = std::uint16_t;
 using dword = std::uint32_t;
 
 ////////////////////////////////////////////////////////////////////////////////
-enum type : dword;
+enum msg_id : dword;
 
 constexpr byte start_sysex = 0xf0;
 constexpr byte end_sysex = 0xf7;
 
-constexpr type sysex(byte id) noexcept
-{ return static_cast<type>(dword(start_sysex) + (dword(id) << 8)); }
+constexpr msg_id sysex(byte sysex_id) noexcept
+{ return static_cast<msg_id>(dword(start_sysex) + (dword(sysex_id) << 8)); }
 
-constexpr bool is_sysex(type id) noexcept
+constexpr bool is_sysex(msg_id id) noexcept
 { return byte(id & 0xff) == start_sysex; }
 
-constexpr type ext_sysex(word id) noexcept
-{ return static_cast<type>(dword(start_sysex) + (dword(id) << 16)); }
+constexpr msg_id ext_sysex(word ext_id) noexcept
+{ return static_cast<msg_id>(dword(start_sysex) + (dword(ext_id) << 16)); }
 
-constexpr bool is_ext_sysex(type id) noexcept
+constexpr bool is_ext_sysex(msg_id id) noexcept
 { return is_sysex(id) && 0 == ((id >> 8) & 0xff); }
 
-// message type includes message id,
-// and optional sysex id and extended id
-enum type : dword
+// message id includes standard id,
+// as well as optional sysex id and extended id
+enum msg_id : dword
 {
     version_query           = 0xf9,
     version_response        = version_query,
@@ -64,7 +64,7 @@ enum type : dword
 
 // get message size based on whether
 // itsa standard, sysex or extended sysex message
-constexpr auto size(type id) noexcept
+constexpr auto size(msg_id id) noexcept
 { return is_ext_sysex(id) ? sizeof(dword) : is_sysex(id) ? sizeof(word) : sizeof(byte); }
 
 ////////////////////////////////////////////////////////////////////////////////
