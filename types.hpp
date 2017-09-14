@@ -50,6 +50,8 @@ constexpr bool is_ext_sysex(msg_id id) noexcept
 // as well as optional sysex id and extended id
 enum msg_id : dword
 {
+    no_id                   = 0,
+
     port_value_base         = 0x90,
     port_value_end          = 0x9f + 1,
 
