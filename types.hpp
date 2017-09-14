@@ -115,6 +115,20 @@ namespace literals
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// protocol version
+struct version
+{
+    int major, minor;
+};
+
+// firmware version & name
+struct firmware
+{
+    int major, minor;
+    std::string name;
+};
+
+////////////////////////////////////////////////////////////////////////////////
 // pin number
 using pos = byte;
 constexpr pos npos = -1;
