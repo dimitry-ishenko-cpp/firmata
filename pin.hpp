@@ -57,7 +57,7 @@ public:
 
 private:
     ////////////////////
-    firmata::pos digital_ = invalid, analog_ = invalid;
+    firmata::pos digital_ = npos, analog_ = npos;
 
     std::set<firmata::mode> modes_;
     firmata::mode mode_;

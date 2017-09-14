@@ -182,7 +182,7 @@ void control::info()
         auto& pin = this->pin(n);
 
         cout << "  digital: " << int(pin.pos(digital)) << endl;
-        if(pin.pos(firmata::analog) != invalid)
+        if(pin.pos(firmata::analog) != npos)
             cout << "  analog: " << int(pin.pos(firmata::analog)) << endl;
 
         cout << "  mode: " << to_string(pin.mode()) << endl;

@@ -117,7 +117,7 @@ namespace literals
 ////////////////////////////////////////////////////////////////////////////////
 // pin number
 using pos = byte;
-constexpr pos invalid = -1;
+constexpr pos npos = -1;
 
 // pin type
 enum type { digital, analog };
