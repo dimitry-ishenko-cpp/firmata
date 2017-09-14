@@ -60,7 +60,7 @@ private:
 
     ////////////////////
     // get specific reply discarding others
-    payload read(msg_id);
+    payload read_until(msg_id);
 
     void query_firmware();
     void query_capability();
