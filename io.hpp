@@ -15,6 +15,8 @@
 
 #include <asio/io_service.hpp>
 #include <asio/serial_port.hpp>
+#include <asio/streambuf.hpp>
+#include <functional>
 #include <string>
 #include <tuple>
 
@@ -29,8 +31,13 @@ class base
 {
 public:
     ////////////////////
+    // blocking read/write
     virtual void write(msg_id, const payload& = { }) = 0;
     virtual std::tuple<msg_id, payload> read() = 0;
+
+    // async read callback
+    using callback = std::function<void(msg_id, const payload&)>;
+    virtual void set_callback(callback) = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -53,6 +60,7 @@ class serial : public base
 public:
     ////////////////////
     serial(asio::io_service& io, const std::string& device);
+    virtual ~serial() noexcept;
 
     void set(baud_rate);
     void set(flow_control);
@@ -63,9 +71,18 @@ public:
     virtual void write(msg_id, const payload& = { }) override;
     virtual std::tuple<msg_id, payload> read() override;
 
+    virtual void set_callback(callback) override;
+
 private:
     ////////////////////
     asio::serial_port port_;
+
+    void sched_read();
+
+    asio::streambuf store_;
+    void async_read(const asio::error_code&);
+
+    callback fn_;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

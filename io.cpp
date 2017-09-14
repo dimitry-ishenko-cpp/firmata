@@ -8,7 +8,9 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 #include "firmata/io.hpp"
+
 #include <asio.hpp>
+#include <utility>
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace firmata
@@ -19,37 +21,16 @@ namespace io
 ////////////////////////////////////////////////////////////////////////////////
 serial::serial(asio::io_service& io, const std::string& device) :
     port_(io, device)
-{ }
+{ sched_read(); }
+
+serial::~serial() noexcept { asio::error_code ec; port_.cancel(ec); }
 
 ////////////////////////////////////////////////////////////////////////////////
-void serial::set(baud_rate baud)
-{
-    port_.set_option(asio::serial_port::baud_rate(baud));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-void serial::set(flow_control flow)
-{
-    port_.set_option(asio::serial_port::flow_control(flow));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-void serial::set(parity pari)
-{
-    port_.set_option(asio::serial_port::parity(pari));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-void serial::set(stop_bits bits)
-{
-    port_.set_option(asio::serial_port::stop_bits(bits));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-void serial::set(char_size bits)
-{
-    port_.set_option(asio::serial_port::character_size(bits));
-}
+void serial::set(baud_rate    baud) { port_.set_option(asio::serial_port::baud_rate(baud)); }
+void serial::set(flow_control flow) { port_.set_option(asio::serial_port::flow_control(flow)); }
+void serial::set(parity       pari) { port_.set_option(asio::serial_port::parity(pari)); }
+void serial::set(stop_bits    bits) { port_.set_option(asio::serial_port::stop_bits(bits)); }
+void serial::set(char_size    bits) { port_.set_option(asio::serial_port::character_size(bits)); }
 
 ////////////////////////////////////////////////////////////////////////////////
 void serial::write(msg_id id, const payload& data)
@@ -68,45 +49,81 @@ void serial::write(msg_id id, const payload& data)
 ////////////////////////////////////////////////////////////////////////////////
 std::tuple<msg_id, payload> serial::read()
 {
-    msg_id id;
+    msg_id id = no_id;
     payload message;
 
-    // get message id
-    asio::read(port_, asio::buffer(&id, sizeof(byte)));
+    callback fn = [&](msg_id _id, const payload& _message)
+    { id = _id; message = _message; };
 
-    // if this is a sysex message, get sysex id
-    if(is_sysex(id))
+    std::swap(fn, fn_);
+    do port_.get_io_service().run_one(); while(id == no_id);
+    std::swap(fn, fn_);
+
+    return std::make_tuple(id, message);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void serial::set_callback(callback fn) { fn_ = std::move(fn); }
+
+////////////////////////////////////////////////////////////////////////////////
+void serial::sched_read()
+{
+    asio::async_read(port_, store_,
+        asio::transfer_at_least(3),
+        std::bind(&serial::async_read, this, std::placeholders::_1)
+    );
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void serial::async_read(const asio::error_code& ec)
+{
+    if(ec) return;
+
+    while(store_.size() >= 3)
     {
-        byte sid;
-        asio::read(port_, asio::buffer(&sid, sizeof(sid)));
-        id = sysex(sid);
+        auto begin = asio::buffers_begin(store_.data());
+        auto end = asio::buffers_end(store_.data());
+        auto ci = begin, ci_end = ci;
 
-        // if this is an extended sysex message, get extended id
-        if(is_ext_sysex(id))
+        // get message id
+        msg_id id = static_cast<msg_id>(*ci++);
+        payload message;
+
+        // if this is a sysex message, get sysex id
+        if(is_sysex(id))
         {
-            word eid;
-            asio::read(port_, asio::buffer(&eid, sizeof(eid)));
-            id = ext_sysex(eid);
+            byte sid = *ci++;
+            id = sysex(sid);
+
+            // if this is an extended sysex message, get extended id
+            if(is_ext_sysex(id))
+            {
+                // need 2 bytes for extended id
+                if(store_.size() < 4) break;
+
+                word eid = word(*ci++) + (word(*ci++) << 8);
+                id = ext_sysex(eid);
+            }
+
+            // find end_sysex
+            for(ci_end = ci; ci_end != end && *ci_end != char(end_sysex); ++ci_end);
+
+            // end_sysex not found
+            if(ci_end == end) break;
+        }
+        else
+        {
+            // standard message
+            ci_end = ci + 2;
         }
 
-        // get payload
-        asio::streambuf sb;
-        asio::read_until(port_, sb, end_sysex);
+        message.insert(message.end(), ci, ci_end);
+        store_.consume(ci_end - begin + (is_sysex(id) ? 1 : 0));
 
-        message.insert(message.end(),
-            asio::buffers_begin(sb.data()),
-            asio::buffers_end(sb.data())
-        );
-        message.pop_back(); // remove end_sysex
-    }
-    else
-    {
-        // get payload
-        message.resize(2);
-        asio::read(port_, asio::buffer(message));
+        if(fn_) fn_(id, message);
     }
 
-    return std::make_tuple(id, std::move(message));
+    sched_read();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
