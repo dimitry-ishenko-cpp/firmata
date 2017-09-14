@@ -119,9 +119,6 @@ namespace literals
 using pos = byte;
 constexpr pos npos = -1;
 
-// pin type
-enum type { digital, analog };
-
 // pin mode
 enum mode : byte
 {
