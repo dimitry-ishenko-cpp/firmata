@@ -35,15 +35,10 @@ public:
     void reset();
 
     ////////////////////
-    auto pin_count() const noexcept { return pins_.size(); }
+    auto pin_count() const noexcept { return digital_.size(); }
 
-    auto const& pin(pos n) const { return pins_.at(n); }
-    auto& pin(pos n) { return pins_.at(n); }
-
-    auto analog_count() const noexcept { return analog_.size(); }
-
-    auto const& analog(pos n) const { return *analog_.at(n); }
-    auto& analog(pos n) { return *analog_.at(n); }
+    auto const& pin(pos n) const { return digital_.at(n); }
+    auto& pin(pos n) { return digital_.at(n); }
 
 private:
     ////////////////////
@@ -52,10 +47,10 @@ private:
     std::tuple<int, int> version_ { 0, 0 };
     std::string firmware_;
 
-    std::vector<firmata::pin> pins_;
+    std::vector<firmata::pin> digital_;
 
     // analog to digital pin map
-    using iterator = decltype(pins_)::iterator;
+    using iterator = decltype(digital_)::iterator;
     std::vector<iterator> analog_;
 
     ////////////////////
