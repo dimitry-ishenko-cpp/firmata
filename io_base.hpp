@@ -32,7 +32,7 @@ public:
 
     // async read callback
     using callback = std::function<void(msg_id, const payload&)>;
-    virtual void set_callback(callback) = 0;
+    virtual void reset_async(callback = nullptr) = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

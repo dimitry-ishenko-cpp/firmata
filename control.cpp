@@ -27,7 +27,7 @@ control::control(io::base* io) : io_(io)
     //info();
 
     using namespace std::placeholders;
-    io_->set_callback(std::bind(&control::async_read, this, _1, _2));
+    io_->reset_async(std::bind(&control::async_read, this, _1, _2));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

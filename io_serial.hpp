@@ -57,7 +57,7 @@ public:
     virtual void write(msg_id, const payload& = { }) override;
     virtual std::tuple<msg_id, payload> read() override;
 
-    virtual void set_callback(callback) override;
+    virtual void reset_async(callback = nullptr) override;
 
 private:
     ////////////////////
