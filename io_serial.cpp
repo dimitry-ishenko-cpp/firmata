@@ -79,25 +79,27 @@ void serial::sched_read()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void serial::async_read(const asio::error_code& ec)
+std::tuple<msg_id, payload> serial::parse_one()
 {
-    if(ec) return;
+    msg_id id = no_id;
+    payload message;
 
-    while(store_.size() >= 3)
+    do
     {
+        // need at least 3 bytes (minimum message)
+        if(store_.size() < 3) break;
+
         auto begin = asio::buffers_begin(store_.data());
         auto end = asio::buffers_end(store_.data());
-        auto ci = begin, ci_end = ci;
+        auto ci = begin;
 
         // get message id
-        msg_id id = static_cast<msg_id>(*ci++);
-        payload message;
+        id = static_cast<msg_id>(*ci++);
 
         // if this is a sysex message, get sysex id
         if(is_sysex(id))
         {
-            byte sid = *ci++;
-            id = sysex(sid);
+            id = sysex(*ci++);
 
             // if this is an extended sysex message, get extended id
             if(is_ext_sysex(id))
@@ -105,24 +107,44 @@ void serial::async_read(const asio::error_code& ec)
                 // need 2 bytes for extended id
                 if(store_.size() < 4) break;
 
-                word eid = word(*ci++) + (word(*ci++) << 8);
-                id = ext_sysex(eid);
+                id = ext_sysex(word(*ci++) + (word(*ci++) << 7));
             }
 
             // find end_sysex
-            for(ci_end = ci; ci_end != end && *ci_end != char(end_sysex); ++ci_end);
+            for(auto ci_end = ci; ci_end != end; ++ci_end)
+                if(byte(*ci_end) == end_sysex)
+                {
+                    message.insert(message.end(), ci, ci_end);
+                    store_.consume(ci_end - begin + 1);
 
-            // end_sysex not found
-            if(ci_end == end) break;
+                    break;
+                }
         }
         else
         {
             // standard message
-            ci_end = ci + 2;
+            message.insert(message.end(), ci, ci + 2);
+            store_.consume(3);
         }
+    }
+    while(false);
 
-        message.insert(message.end(), ci, ci_end);
-        store_.consume(ci_end - begin + (is_sysex(id) ? 1 : 0));
+    return std::make_tuple(id, message);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void serial::async_read(const asio::error_code& ec)
+{
+    if(ec) return;
+
+    while(store_.size() >= 3)
+    {
+        msg_id id;
+        payload message;
+        std::tie(id, message) = parse_one();
+
+        // incomplete or no message
+        if(message.empty()) break;
 
         if(fn_) fn_(id, message);
     }

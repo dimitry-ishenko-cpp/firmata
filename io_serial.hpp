@@ -66,6 +66,8 @@ private:
     void sched_read();
 
     asio::streambuf store_;
+    std::tuple<msg_id, payload> parse_one();
+
     void async_read(const asio::error_code&);
 
     callback fn_;
