@@ -25,6 +25,7 @@ public:
     explicit control(io::base*);
 
     ////////////////////
+    auto const& protocol() const { return protocol_; }
     auto const& firmware() const { return firmware_; }
 
     void reset();
@@ -39,6 +40,7 @@ private:
     ////////////////////
     command command_;
 
+    firmata::protocol protocol_;
     firmata::firmware firmware_;
     firmata::pins pins_;
 

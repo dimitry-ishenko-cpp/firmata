@@ -20,7 +20,9 @@ namespace firmata
 control::control(io::base* io) :
     command_(io)
 {
+    protocol_ = command_.query_version();
     firmware_ = command_.query_firmware();
+
     pins_ = command_.query_capability();
     command_.query_analog_mapping(pins_);
     command_.query_state(pins_);
@@ -74,6 +76,10 @@ auto to_string(firmata::mode mode)
 void control::info()
 {
     using namespace std;
+
+    cout << "PROTOCOL: "
+         << protocol().major << "." << protocol().minor
+         << endl;
 
     cout << "FIRMWARE: "
          << firmware().name  << " "
