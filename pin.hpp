@@ -44,11 +44,11 @@ public:
     }
 
     ////////////////////
-    firmata::pos digital() const noexcept { return digital_; }
-    firmata::pos analog() const noexcept { return analog_; }
+    auto digital() const noexcept { return digital_; }
+    auto analog() const noexcept { return analog_; }
 
     auto const& modes() const noexcept { return modes_; }
-    bool supports(firmata::mode n) const noexcept { return modes_.count(n); }
+    bool supports(firmata::mode mode) const noexcept { return modes_.count(mode); }
 
     auto mode() const noexcept { return mode_; }
     auto res() const noexcept { return reses_.at(mode_); }
