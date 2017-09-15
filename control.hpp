@@ -33,22 +33,16 @@ public:
     void reset();
 
     ////////////////////
-    auto pin_count() const noexcept { return digital_.size(); }
+    auto pin_count() const noexcept { return pins_.size(); }
 
-    auto const& pin(pos n) const { return digital_.at(n); }
-    auto& pin(pos n) { return digital_.at(n); }
+    auto const& pin(pos n) const { return pins_.at(n); }
+    auto& pin(pos n) { return pins_.at(n); }
 
 private:
     ////////////////////
     io::base* io_;
-
     firmata::firmware firmware_;
-
-    std::vector<firmata::pin> digital_;
-
-    // analog to digital pin map
-    using iterator = decltype(digital_)::iterator;
-    std::vector<iterator> analog_;
+    std::vector<firmata::pin> pins_;
 
     ////////////////////
     // get specific reply discarding others

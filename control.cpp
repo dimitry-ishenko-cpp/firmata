@@ -80,7 +80,7 @@ void control::query_capability()
         if(*ci == 0x7f)
         {
             pin.digital_ = pos;
-            digital_.push_back(std::move(pin));
+            pins_.push_back(std::move(pin));
 
             pin = firmata::pin(); ++pos;
         }
@@ -102,34 +102,22 @@ void control::query_analog_mapping()
     io_->write(analog_mapping_query);
     auto data = read_until(analog_mapping_response);
 
-    firmata::pos max = 0;
-    analog_.resize(digital_.size(), digital_.end());
-
-    auto pi = digital_.begin();
+    auto pi = pins_.begin();
     for(auto ci = data.begin(); ci < data.end(); ++ci, ++pi)
     {
         auto pos = *ci;
         if(pos != 0x7f)
         {
-            assert(pi < digital_.end());
-            assert(pos < analog_.size());
-
+            assert(pi < pins_.end());
             pi->analog_ = pos;
-            analog_[pos] = pi;
-
-            max = std::max(max, pos);
         }
     }
-
-    analog_.resize(max);
-
-    for(auto pi : analog_) assert(pi != digital_.end());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void control::query_state()
 {
-    for(auto& pin : digital_)
+    for(auto& pin : pins_)
     {
         io_->write(pin_state_query, { pin.digital() });
         auto data = read_until(pin_state_response);
