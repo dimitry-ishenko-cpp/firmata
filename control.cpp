@@ -91,8 +91,9 @@ void control::info()
         cout << "PIN" << endl;
         auto& pin = this->pin(n);
 
-        cout << "  digital: " << int(pin.digital()) << endl;
-        if(pin.analog() != npos) cout << "  analog: " << int(pin.analog()) << endl;
+        cout << "  digital: " << int(pin.pos()) << endl;
+        if(pin.analog_pos() != npos)
+            cout << "  analog: " << int(pin.analog_pos()) << endl;
 
         cout << "  mode: " << to_string(pin.mode()) << endl;
         cout << "  res: " << pin.res() << endl;

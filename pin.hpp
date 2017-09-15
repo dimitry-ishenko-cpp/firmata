@@ -30,8 +30,8 @@ public:
     pin& operator=(pin&&) noexcept = default;
 
     ////////////////////
-    auto digital() const noexcept { return digital_; }
-    auto analog() const noexcept { return analog_; }
+    auto pos() const noexcept { return digital_; }
+    auto analog_pos() const noexcept { return analog_; }
 
     auto const& modes() const noexcept { return modes_; }
     bool supports(firmata::mode mode) const noexcept { return modes_.count(mode); }
