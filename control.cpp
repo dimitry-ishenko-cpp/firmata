@@ -1,6 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2013-2017 Dimitry Ishenko
-//
 // Contact: dimitry (dot) ishenko (at) (gee) mail (dot) com
 //
 // Distributed under the GNU GPL v3.
