@@ -71,6 +71,8 @@ private:
 
     ////////////////////
     pin() noexcept = default;
+    pin(pos digital) noexcept : digital_(digital) { }
+    friend class command;
     friend class control;
 };
 
