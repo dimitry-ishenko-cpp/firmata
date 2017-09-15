@@ -87,7 +87,7 @@ enum msg_id : dword
     pin_state_query         = sysex(0x6d),
     pin_state_response      = sysex(0x6e),
 
-    analog_value            = sysex(0x6f),
+    ext_analog_value        = sysex(0x6f),
 
     string_data             = sysex(0x71),
 
