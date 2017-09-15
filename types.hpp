@@ -114,7 +114,7 @@ int to_value(payload::const_iterator begin, payload::const_iterator end);
 
 ////////////////////////////////////////////////////////////////////////////////
 // protocol version
-struct version
+struct protocol
 {
     int major, minor;
 };
