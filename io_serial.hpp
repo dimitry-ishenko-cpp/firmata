@@ -63,7 +63,7 @@ private:
     ////////////////////
     asio::serial_port port_;
 
-    void sched_read();
+    void sched_async();
 
     asio::streambuf store_;
     std::tuple<msg_id, payload> parse_one();

@@ -22,7 +22,7 @@ namespace io
 ////////////////////////////////////////////////////////////////////////////////
 serial::serial(asio::io_service& io, const std::string& device) :
     port_(io, device)
-{ sched_read(); }
+{ sched_async(); }
 
 serial::~serial() noexcept { asio::error_code ec; port_.cancel(ec); }
 
@@ -70,7 +70,7 @@ std::tuple<msg_id, payload> serial::read()
 void serial::reset_async(callback fn) { fn_ = std::move(fn); }
 
 ////////////////////////////////////////////////////////////////////////////////
-void serial::sched_read()
+void serial::sched_async()
 {
     asio::async_read(port_, store_,
         asio::transfer_at_least(3),
@@ -149,7 +149,7 @@ void serial::async_read(const asio::error_code& ec)
         if(fn_) fn_(id, message);
     }
 
-    sched_read();
+    sched_async();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
