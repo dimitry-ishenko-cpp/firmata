@@ -46,7 +46,7 @@ class serial : public base
 public:
     ////////////////////
     serial(asio::io_service& io, const std::string& device);
-    virtual ~serial() noexcept;
+    virtual ~serial() noexcept { reset_async(); }
 
     void set(baud_rate);
     void set(flow_control);

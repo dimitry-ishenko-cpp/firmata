@@ -22,9 +22,7 @@ namespace io
 ////////////////////////////////////////////////////////////////////////////////
 serial::serial(asio::io_service& io, const std::string& device) :
     port_(io, device)
-{ sched_async(); }
-
-serial::~serial() noexcept { asio::error_code ec; port_.cancel(ec); }
+{ }
 
 ////////////////////////////////////////////////////////////////////////////////
 void serial::set(baud_rate    baud) { port_.set_option(asio::serial_port::baud_rate(baud)); }
@@ -56,18 +54,30 @@ std::tuple<msg_id, payload> serial::read()
     msg_id id = no_id;
     payload message;
 
-    callback fn = [&](msg_id _id, const payload& _message)
-    { id = _id; message = _message; };
+    auto saved = fn_;
+    reset_async([&](msg_id _id, const payload& _message)
+    {
+        id = _id; message = _message;
+    });
 
-    std::swap(fn, fn_);
     do port_.get_io_service().run_one(); while(id == no_id);
-    std::swap(fn, fn_);
+    reset_async(saved);
 
     return std::make_tuple(id, message);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void serial::reset_async(callback fn) { fn_ = std::move(fn); }
+void serial::reset_async(callback fn)
+{
+    if(fn_ && !fn)
+    {
+        asio::error_code ec;
+        port_.cancel(ec);
+    }
+    if(!fn_ && fn) sched_async();
+
+    fn_ = std::move(fn);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 void serial::sched_async()
