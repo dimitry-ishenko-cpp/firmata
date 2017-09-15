@@ -10,10 +10,7 @@
 #define FIRMATA_PIN_HPP
 
 ////////////////////////////////////////////////////////////////////////////////
-#include "firmata/types.hpp"
-
-#include <map>
-#include <set>
+#include "firmata/pin_base.hpp"
 #include <vector>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -21,27 +18,16 @@ namespace firmata
 {
 
 ////////////////////////////////////////////////////////////////////////////////
-class pin
+class pin : private pin_base
 {
 public:
     ////////////////////
+    pin() noexcept = default;
     pin(const pin&) = delete;
-    pin(pin&& other) noexcept { swap(other); }
+    pin(pin&&) noexcept = default;
 
     pin& operator=(const pin&) = delete;
-    pin& operator=(pin&& other) noexcept { swap(other); return *this; }
-
-    void swap(pin& other) noexcept
-    {
-        using std::swap;
-        swap(digital_, other.digital_);
-        swap(analog_,  other.analog_ );
-        swap(modes_,   other.modes_  );
-        swap(mode_,    other.mode_   );
-        swap(reses_,   other.reses_  );
-        swap(value_,   other.value_  );
-        swap(state_,   other.state_  );
-    }
+    pin& operator=(pin&&) noexcept = default;
 
     ////////////////////
     auto digital() const noexcept { return digital_; }
@@ -55,32 +41,10 @@ public:
 
     auto value() const noexcept { return value_; }
     auto state() const noexcept { return state_; }
-
-private:
-    ////////////////////
-    firmata::pos digital_ = npos, analog_ = npos;
-
-    std::set<firmata::mode> modes_;
-    firmata::mode mode_;
-
-    // resolution for each mode
-    std::map<firmata::mode, firmata::res> reses_;
-
-    int value_ = 0;
-    int state_ = 0;
-
-    ////////////////////
-    pin() noexcept = default;
-    pin(pos digital) noexcept : digital_(digital) { }
-    friend class command;
-    friend class control;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 using pins = std::vector<pin>;
-
-////////////////////////////////////////////////////////////////////////////////
-inline void swap(pin& lhs, pin& rhs) noexcept { lhs.swap(rhs); }
 
 ////////////////////////////////////////////////////////////////////////////////
 }

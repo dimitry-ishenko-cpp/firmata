@@ -7,12 +7,22 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 #include "command.hpp"
+
 #include <algorithm>
 #include <cassert>
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace firmata
 {
+
+////////////////////////////////////////////////////////////////////////////////
+namespace
+{
+
+inline auto& coerce(pin& p) noexcept
+{ return reinterpret_cast<pin_base&>(p); }
+
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 protocol command::query_version()
@@ -47,13 +57,14 @@ pins command::query_capability()
     auto data = read_until(capability_response);
 
     pos digital = 0;
-    firmata::pin pin(digital);
+    firmata::pin pin;
     pins all;
 
     for(auto ci = data.begin(); ci < data.end(); ++ci)
         if(*ci == 0x7f)
         {
-            all.push_back(firmata::pin(++digital));
+            coerce(pin).digital(digital++);
+            all.push_back(firmata::pin());
 
             using std::swap;
             swap(pin, all.back());
@@ -63,12 +74,12 @@ pins command::query_capability()
             auto mode = static_cast<firmata::mode>(*ci);
             auto res = static_cast<firmata::res>(*++ci);
 
-            pin.modes_.insert(mode);
-            pin.reses_.emplace(mode, res);
+            coerce(pin).add(mode);
+            coerce(pin).add(mode, res);
         }
 
     // no garbage at end
-    assert(pin.modes_.empty());
+    assert(pin.modes().empty());
 
     return all;
 }
@@ -84,7 +95,7 @@ void command::query_analog_mapping(pins& all)
         if(*ci != 0x7f)
         {
             assert(pi < all.end());
-            pi->analog_ = *ci;
+            coerce(*pi).analog(*ci);
         }
 }
 
@@ -99,8 +110,8 @@ void command::query_state(pins& all)
         assert(data.size() >= 3);
         assert(data[0] == pin.digital());
 
-        pin.mode_ = static_cast<mode>(data[1]);
-        pin.state_ = to_value(data.begin() + 2, data.end());
+        coerce(pin).mode(static_cast<mode>(data[1]));
+        coerce(pin).state(to_value(data.begin() + 2, data.end()));
     }
 }
 
