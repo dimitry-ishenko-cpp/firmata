@@ -54,6 +54,8 @@ struct pin_base
     void add(firmata::mode mode, firmata::res res) { reses_.emplace(mode, res); }
 
     void mode(firmata::mode mode) { mode_ = mode; }
+
+    void value(int value) { value_ = value; }
     void state(int value) { state_ = value; }
 
     ////////////////////
