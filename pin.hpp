@@ -37,9 +37,13 @@ public:
     bool supports(firmata::mode mode) const noexcept { return modes_.count(mode); }
 
     auto mode() const noexcept { return mode_; }
+    void mode(firmata::mode mode) { set_mode(mode); }
+
     auto res() const noexcept { return reses_.at(mode_); }
 
     auto value() const noexcept { return value_; }
+    void value(int n) { set_value(n); }
+
     auto state() const noexcept { return state_; }
 };
 
