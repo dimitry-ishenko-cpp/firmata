@@ -13,8 +13,6 @@
 #include "firmata/io.hpp"
 #include "firmata/pin.hpp"
 
-#include <vector>
-
 ////////////////////////////////////////////////////////////////////////////////
 namespace firmata
 {
@@ -41,7 +39,7 @@ private:
     ////////////////////
     io::base* io_;
     firmata::firmware firmware_;
-    std::vector<firmata::pin> pins_;
+    firmata::pins pins_;
 
     ////////////////////
     // get specific reply discarding others
