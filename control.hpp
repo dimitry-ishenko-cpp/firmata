@@ -62,6 +62,8 @@ private:
     // get specific reply discarding others
     payload read_until(msg_id);
 
+    void async_read(msg_id, const payload&);
+
     void query_firmware();
     void query_capability();
     void query_analog_mapping();

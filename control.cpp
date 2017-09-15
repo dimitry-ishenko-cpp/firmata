@@ -10,6 +10,7 @@
 #include "firmata/control.hpp"
 
 #include <algorithm>
+#include <functional>
 #include <iostream>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -23,8 +24,10 @@ control::control(io::base* io) : io_(io)
     query_capability();
     query_analog_mapping();
     query_state();
-
     //info();
+
+    using namespace std::placeholders;
+    io_->set_callback(std::bind(&control::async_read, this, _1, _2));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -44,6 +47,12 @@ payload control::read_until(msg_id reply_id)
     while(id != reply_id);
 
     return data;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void control::async_read(msg_id, const payload&)
+{
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
