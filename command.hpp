@@ -37,13 +37,13 @@ public:
     void query_analog_mapping(pins&);
     void query_state(pins&);
 
-    void pin_mode(pin&, mode);
+    void pin_mode(pos, mode);
 
-    void digital_value(pin&, bool);
-    void analog_value(pin&, int);
+    void digital_value(pos, bool);
+    void analog_value(pos, int);
 
-    void report_analog(pin&, bool);
-    void report_digital(pin&, bool);
+    void report_analog(pos, bool);
+    void report_digital(pos, bool);
 
     using msec = std::chrono::milliseconds;
     void sample_rate(const msec&);

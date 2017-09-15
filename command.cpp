@@ -107,55 +107,54 @@ void command::query_state(pins& all)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void command::pin_mode(firmata::pin& pin, firmata::mode mode)
+void command::pin_mode(firmata::pos pos, firmata::mode mode)
 {
-    io_->write(firmata::pin_mode, { pin.pos(), mode });
+    io_->write(firmata::pin_mode, { pos, mode });
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void command::digital_value(firmata::pin& pin, bool value)
+void command::digital_value(firmata::pos pos, bool value)
 {
-    io_->write(firmata::digital_value, { pin.pos(), value });
+    io_->write(firmata::digital_value, { pos, value });
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void command::analog_value(firmata::pin& pin, int value)
+void command::analog_value(firmata::pos pos, int value)
 {
-    assert(pin.analog_pos() != npos);
+    assert(pos != npos);
 
-    if(pin.analog_pos() <= 15 && value <= 16383)
+    if(pos <= 15 && value <= 16383)
     {
-        auto id = static_cast<msg_id>(analog_value_base + pin.analog_pos());
+        auto id = static_cast<msg_id>(analog_value_base + pos);
         io_->write(id, to_data(value));
     }
     else
     {
         payload data = to_data(value);
-        data.insert(data.begin(), pin.analog_pos());
+        data.insert(data.begin(), pos);
 
         io_->write(ext_analog_value, data);
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void command::report_analog(firmata::pin& pin, bool value)
+void command::report_analog(firmata::pos pos, bool value)
 {
-    assert(pin.analog_pos() != npos);
-    assert(pin.analog_pos() <= 15);
+    assert(pos != npos);
+    assert(pos <= 15);
 
-    auto id = static_cast<msg_id>(report_analog_base + pin.analog_pos());
+    auto id = static_cast<msg_id>(report_analog_base + pos);
     io_->write(id, { value });
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void command::report_digital(firmata::pin& pin, bool value)
+void command::report_digital(firmata::pos pos, bool value)
 {
-    int port = pin.pos() / 8;
-    int bit  = pin.pos() % 8;
+    int port = pos / 8, bit = pos % 8;
+    assert(port <= 15);
 
     ports_[port].set(bit, value);
 
-    assert(port <= 15);
     auto id = static_cast<msg_id>(report_port_base + port);
     io_->write(id, { ports_[port].any() });
 }
