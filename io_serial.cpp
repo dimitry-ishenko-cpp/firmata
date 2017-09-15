@@ -100,7 +100,7 @@ std::tuple<msg_id, payload> serial::parse_one()
         auto ci = begin;
 
         // get message id
-        id = static_cast<msg_id>(*ci++);
+        id = static_cast<msg_id>(byte(*ci++));
 
         // if this is a sysex message, get sysex id
         if(is_sysex(id))
