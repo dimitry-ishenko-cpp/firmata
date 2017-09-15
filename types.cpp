@@ -35,4 +35,17 @@ int to_value(payload::const_iterator begin, payload::const_iterator end)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+payload to_data(int value)
+{
+    payload data;
+    do
+    {
+        data.push_back(value & 0x7f);
+        value >>= 7;
+    }
+    while(value);
+    return data;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 }
