@@ -10,7 +10,6 @@
 #include "firmata/io_serial.hpp"
 
 #include <asio.hpp>
-#include <thread>
 #include <utility>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -43,9 +42,6 @@ void serial::write(msg_id id, const payload& data)
         message.push_back(asio::buffer(&end_sysex, sizeof(end_sysex)));
 
     asio::write(port_, message);
-
-    using namespace std::chrono_literals;
-    std::this_thread::sleep_for(4ms);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
