@@ -17,116 +17,31 @@ namespace firmata
 {
 
 ////////////////////////////////////////////////////////////////////////////////
-control::control(io::base* io) : io_(io)
+control::control(io::base* io) :
+    command_(io)
 {
-    query_firmware();
-    query_capability();
-    query_analog_mapping();
-    query_state();
+    firmware_ = command_.query_firmware();
+    pins_ = command_.query_capability();
+    command_.query_analog_mapping(pins_);
+    command_.query_state(pins_);
+
     //info();
 
     using namespace std::placeholders;
-    io_->reset_async(std::bind(&control::async_read, this, _1, _2));
+    io->reset_async(std::bind(&control::async_read, this, _1, _2));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void control::reset()
 {
-    io_->write(firmata::reset);
-    query_state();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-payload control::read_until(msg_id reply_id)
-{
-    msg_id id;
-    payload data;
-
-    do { std::tie(id, data) = io_->read(); }
-    while(id != reply_id);
-
-    return data;
+    command_.reset();
+    command_.query_state(pins_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void control::async_read(msg_id, const payload&)
 {
 
-}
-
-////////////////////////////////////////////////////////////////////////////////
-void control::query_firmware()
-{
-    io_->write(firmware_query);
-    auto data = read_until(firmware_response);
-
-    assert(data.size() >= 2);
-
-    firmware_.major = data[0];
-    firmware_.minor = data[1];
-    firmware_.name = to_string(data.begin() + 2, data.end());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-void control::query_capability()
-{
-    io_->write(capability_query);
-    auto data = read_until(capability_response);
-
-    firmata::pin pin;
-    firmata::pos pos = 0;
-    for(auto ci = data.begin(); ci < data.end(); ++ci)
-        if(*ci == 0x7f)
-        {
-            pin.digital_ = pos;
-            pins_.push_back(std::move(pin));
-
-            pin = firmata::pin(); ++pos;
-        }
-        else
-        {
-            auto mode = static_cast<firmata::mode>(*ci);
-            auto res = static_cast<firmata::res>(*++ci);
-
-            pin.modes_.insert(mode);
-            pin.reses_.emplace(mode, res);
-        }
-
-    assert(pin.modes_.empty());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-void control::query_analog_mapping()
-{
-    io_->write(analog_mapping_query);
-    auto data = read_until(analog_mapping_response);
-
-    auto pi = pins_.begin();
-    for(auto ci = data.begin(); ci < data.end(); ++ci, ++pi)
-    {
-        auto pos = *ci;
-        if(pos != 0x7f)
-        {
-            assert(pi < pins_.end());
-            pi->analog_ = pos;
-        }
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-void control::query_state()
-{
-    for(auto& pin : pins_)
-    {
-        io_->write(pin_state_query, { pin.digital() });
-        auto data = read_until(pin_state_response);
-
-        assert(data.size() >= 3);
-        assert(data[0] == pin.digital());
-
-        pin.mode_ = static_cast<mode>(data[1]);
-        pin.state_ = to_value(data.begin() + 2, data.end());
-    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -10,7 +10,7 @@
 #define FIRMATA_CONTROL_HPP
 
 ////////////////////////////////////////////////////////////////////////////////
-#include "firmata/io.hpp"
+#include "firmata/command.hpp"
 #include "firmata/pin.hpp"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -37,20 +37,13 @@ public:
 
 private:
     ////////////////////
-    io::base* io_;
+    command command_;
+
     firmata::firmware firmware_;
     firmata::pins pins_;
 
     ////////////////////
-    // get specific reply discarding others
-    payload read_until(msg_id);
-
     void async_read(msg_id, const payload&);
-
-    void query_firmware();
-    void query_capability();
-    void query_analog_mapping();
-    void query_state();
 
     // for debugging
     void info();
