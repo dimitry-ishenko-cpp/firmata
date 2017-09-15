@@ -51,17 +51,18 @@ void serial::write(msg_id id, const payload& data)
 ////////////////////////////////////////////////////////////////////////////////
 std::tuple<msg_id, payload> serial::read()
 {
-    msg_id id = no_id;
+    msg_id id;
     payload message;
 
-    auto saved = fn_;
-    reset_async([&](msg_id _id, const payload& _message)
-    {
-        id = _id; message = _message;
-    });
+    asio::read(port_, store_, asio::transfer_at_least(3));
+    std::tie(id, message) = parse_one();
 
-    do port_.get_io_service().run_one(); while(id == no_id);
-    reset_async(saved);
+    // must be partial sysex message
+    if(message.empty())
+    {
+        asio::read_until(port_, store_, end_sysex);
+        std::tie(id, message) = parse_one();
+    }
 
     return std::make_tuple(id, message);
 }
