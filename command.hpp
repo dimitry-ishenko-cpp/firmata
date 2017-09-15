@@ -14,6 +14,10 @@
 #include "firmata/pin.hpp"
 #include "firmata/types.hpp"
 
+#include <bitset>
+#include <chrono>
+#include <map>
+
 ////////////////////////////////////////////////////////////////////////////////
 namespace firmata
 {
@@ -33,11 +37,25 @@ public:
     void query_analog_mapping(pins&);
     void query_state(pins&);
 
+    void pin_mode(pin&, mode);
+
+    void digital_value(pin&, bool);
+    void analog_value(pin&, int);
+
+    void report_analog(pin&, bool);
+    void report_digital(pin&, bool);
+
+    using msec = std::chrono::milliseconds;
+    void sample_rate(const msec&);
+
     void reset();
 
 private:
     ////////////////////
     io::base* io_;
+
+    // map of pins by port that are currently being monitored
+    std::map<int, std::bitset<8>> ports_;
 
     // get specific reply discarding others
     payload read_until(msg_id);

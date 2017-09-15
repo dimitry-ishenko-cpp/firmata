@@ -7,6 +7,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 #include "command.hpp"
+#include <algorithm>
 #include <cassert>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -101,6 +102,67 @@ void command::query_state(pins& all)
         pin.mode_ = static_cast<mode>(data[1]);
         pin.state_ = to_value(data.begin() + 2, data.end());
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void command::pin_mode(firmata::pin& pin, firmata::mode mode)
+{
+    io_->write(firmata::pin_mode, { pin.digital(), mode });
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void command::digital_value(firmata::pin& pin, bool value)
+{
+    io_->write(firmata::digital_value, { pin.digital(), value });
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void command::analog_value(firmata::pin& pin, int value)
+{
+    assert(pin.analog() != npos);
+
+    if(pin.analog() <= 15 && value <= 16383)
+    {
+        auto id = static_cast<msg_id>(analog_value_base + pin.analog());
+        io_->write(id, to_data(value));
+    }
+    else
+    {
+        payload data = to_data(value);
+        data.insert(data.begin(), pin.analog());
+
+        io_->write(ext_analog_value, data);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void command::report_analog(firmata::pin& pin, bool value)
+{
+    assert(pin.analog() != npos);
+    assert(pin.analog() <= 15);
+
+    auto id = static_cast<msg_id>(report_analog_base + pin.analog());
+    io_->write(id, { value });
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void command::report_digital(firmata::pin& pin, bool value)
+{
+    int port = pin.digital() / 8;
+    int bit  = pin.digital() % 8;
+
+    ports_[port].set(bit, value);
+
+    assert(port <= 15);
+    auto id = static_cast<msg_id>(report_port_base + port);
+    io_->write(id, { ports_[port].any() });
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void command::sample_rate(const msec& time)
+{
+    int value = std::min<int>(time.count(), 16383);
+    io_->write(firmata::sample_rate, to_data(value & 0x7f));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
