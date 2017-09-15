@@ -64,7 +64,7 @@ std::tuple<msg_id, payload> serial::read()
         std::tie(id, message) = parse_one();
     }
 
-    return std::make_tuple(id, message);
+    return std::make_tuple(id, std::move(message));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -140,7 +140,7 @@ std::tuple<msg_id, payload> serial::parse_one()
     }
     while(false);
 
-    return std::make_tuple(id, message);
+    return std::make_tuple(id, std::move(message));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
