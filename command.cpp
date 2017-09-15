@@ -16,15 +16,6 @@ namespace firmata
 {
 
 ////////////////////////////////////////////////////////////////////////////////
-namespace
-{
-
-inline auto& coerce(pin& p) noexcept
-{ return reinterpret_cast<pin_base&>(p); }
-
-}
-
-////////////////////////////////////////////////////////////////////////////////
 protocol command::query_version()
 {
     io_->write(version);
@@ -63,7 +54,7 @@ pins command::query_capability()
     for(auto ci = data.begin(); ci < data.end(); ++ci)
         if(*ci == 0x7f)
         {
-            coerce(pin).digital(digital++);
+            pin.delegate_.digital(digital++);
             all.push_back(firmata::pin());
 
             using std::swap;
@@ -74,8 +65,8 @@ pins command::query_capability()
             auto mode = static_cast<firmata::mode>(*ci);
             auto res = static_cast<firmata::res>(*++ci);
 
-            coerce(pin).add(mode);
-            coerce(pin).add(mode, res);
+            pin.delegate_.add(mode);
+            pin.delegate_.add(mode, res);
         }
 
     // no garbage at end
@@ -95,7 +86,7 @@ void command::query_analog_mapping(pins& all)
         if(*ci != 0x7f)
         {
             assert(pi < all.end());
-            coerce(*pi).analog(*ci);
+            pi->delegate_.analog(*ci);
         }
 }
 
@@ -110,8 +101,8 @@ void command::query_state(pins& all)
         assert(data.size() >= 3);
         assert(data[0] == pin.pos());
 
-        coerce(pin).mode(static_cast<mode>(data[1]));
-        coerce(pin).state(to_value(data.begin() + 2, data.end()));
+        pin.delegate_.mode(static_cast<mode>(data[1]));
+        pin.delegate_.state(to_value(data.begin() + 2, data.end()));
     }
 }
 
