@@ -26,6 +26,7 @@ public:
     explicit command(io::base* io) : io_(io) { }
 
     ////////////////////
+    protocol query_version();
     firmware query_firmware();
 
     pins query_capability();

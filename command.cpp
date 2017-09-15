@@ -13,6 +13,17 @@ namespace firmata
 {
 
 ////////////////////////////////////////////////////////////////////////////////
+protocol command::query_version()
+{
+    io_->write(version);
+    auto data = read_until(version);
+
+    assert(data.size() == 2);
+
+    return protocol { data[0], data[1] };
+}
+
+////////////////////////////////////////////////////////////////////////////////
 firmware command::query_firmware()
 {
     io_->write(firmware_query);
