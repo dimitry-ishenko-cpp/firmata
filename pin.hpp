@@ -87,20 +87,17 @@ protected:
 
         void value(int value) { pin_->value_ = value; }
         void state(int value) { pin_->state_ = value; }
-
-        void fn_mode(pin::fn_mode fn) { pin_->fn_mode_ = std::move(fn); }
-        void fn_value(pin::fn_value fn) { pin_->fn_value_ = std::move(fn); }
     };
 
-    // command and control modify internal pin state
+    // control class modifies internal pin state
     // through the delegate class
     delegate delegate_ { this };
-    friend class command;
-    friend class control;
 
     pin(firmata::pos pos, fn_mode fm, fn_value fv) :
         digital_(pos), fn_mode_(fm), fn_value_(fv)
     { }
+
+    friend class control;
 
 private:
     ////////////////////

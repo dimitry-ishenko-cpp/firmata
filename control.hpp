@@ -10,8 +10,13 @@
 #define FIRMATA_CONTROL_HPP
 
 ////////////////////////////////////////////////////////////////////////////////
-#include "firmata/command.hpp"
+#include "firmata/io.hpp"
 #include "firmata/pin.hpp"
+#include "firmata/types.hpp"
+
+#include <bitset>
+#include <chrono>
+#include <map>
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace firmata
@@ -30,6 +35,9 @@ public:
 
     void reset();
 
+    template<typename Rep, typename Period>
+    void sample_rate(const std::chrono::duration<Rep, Period>&);
+
     ////////////////////
     auto pin_count() const noexcept { return pins_.size(); }
 
@@ -38,22 +46,55 @@ public:
 
 private:
     ////////////////////
-    command command_;
+    io::base* io_;
 
     firmata::protocol protocol_;
     firmata::firmware firmware_;
     firmata::pins pins_;
 
+    // ports that are currently being monitored
+    std::map<int, std::bitset<8>> ports_;
+
+    ////////////////////
+    // get specific reply discarding others
+    payload read_until(msg_id);
+
+    void query_version();
+    void query_firmware();
+
+    void query_capability();
+    void query_analog_mapping();
+    void query_state();
+
+    void report_all();
+
     void mode(firmata::pin&, firmata::mode);
     void value(firmata::pin&, int);
 
     ////////////////////
+    void pin_mode(firmata::pin&, firmata::mode);
+
+    void digital_value(firmata::pin&, bool);
+    void analog_value(firmata::pin&, int);
+
+    void report_digital(const firmata::pin&, bool);
+    void report_analog(const firmata::pin&, bool);
+
+    using msec = std::chrono::milliseconds;
+    void sample_rate(const msec&);
+
+    void reset_();
+
     void async_read(msg_id, const payload&);
 
-    // for debugging
-    void info();
+    ////////////////////
+    void info(); // for debugging
 };
 
+////////////////////////////////////////////////////////////////////////////////
+template<typename Rep, typename Period>
+void control::sample_rate(const std::chrono::duration<Rep, Period>& time)
+{ sample_rate(std::chrono::duration_cast<msec>(time)); }
 
 ////////////////////////////////////////////////////////////////////////////////
 }
