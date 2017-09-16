@@ -44,6 +44,9 @@ private:
     firmata::firmware firmware_;
     firmata::pins pins_;
 
+    void mode(firmata::pin&, firmata::mode);
+    void value(firmata::pin&, int);
+
     ////////////////////
     void async_read(msg_id, const payload&);
 

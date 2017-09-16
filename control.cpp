@@ -17,6 +17,21 @@ namespace firmata
 {
 
 ////////////////////////////////////////////////////////////////////////////////
+namespace
+{
+
+constexpr inline bool digital(const pin& p) noexcept
+{ return p.mode() == digital_in || p.mode() == digital_out || p.mode() == pullup_in; }
+
+constexpr inline bool analog(const pin& p) noexcept
+{ return p.mode() == analog_in || p.mode() == pwm; }
+
+constexpr inline bool input(const pin& p) noexcept
+{ return p.mode() == digital_in || p.mode() == analog_in || p.mode() == pullup_in; }
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
 control::control(io::base* io) :
     command_(io)
 {
@@ -31,6 +46,19 @@ control::control(io::base* io) :
 
     using namespace std::placeholders;
     io->reset_async(std::bind(&control::async_read, this, _1, _2));
+
+    ////////////////////
+    for(auto& pin : pins_)
+    {
+        pin.delegate_.fn_mode(std::bind(&control::mode, this, _1, _2));
+        pin.delegate_.fn_value(std::bind(&control::value, this, _1, _2));
+
+        if(input(pin))
+        {
+                if(digital(pin)) command_.report_digital(pin.pos(), true);
+            else if(analog(pin)) command_.report_analog(pin.analog_pos(), true);
+        }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -38,6 +66,34 @@ void control::reset()
 {
     command_.reset();
     command_.query_state(pins_);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void control::mode(firmata::pin& pin, firmata::mode mode)
+{
+    if(input(pin))
+    {
+        if(digital(pin))
+            command_.report_digital(pin.pos(), false);
+        else if(analog(pin))
+            command_.report_analog(pin.analog_pos(), false);
+    }
+
+    pin.delegate_.mode(mode);
+    command_.pin_mode(pin.pos(), mode);
+
+    if(input(pin))
+    {
+            if(digital(pin)) command_.report_digital(pin.pos(), true);
+        else if(analog(pin)) command_.report_analog(pin.analog_pos(), true);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void control::value(firmata::pin& pin, int value)
+{
+        if(digital(pin)) command_.digital_value(pin.pos(), value);
+    else if(analog(pin)) command_.analog_value(pin.analog_pos(), value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
