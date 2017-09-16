@@ -65,11 +65,11 @@ private:
 
     void report_all();
 
-    void mode(pin&, firmata::mode);
-    void value(pin&, int);
+    void fn_mode(pos, mode);
+    void fn_value(pos, int);
 
     ////////////////////
-    void pin_mode(pos, firmata::mode);
+    void pin_mode(pos, mode);
 
     void digital_value(pos, bool);
     void analog_value(pos, int);

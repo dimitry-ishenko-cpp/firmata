@@ -56,20 +56,17 @@ public:
     bool supports(firmata::mode mode) const noexcept { return modes_.count(mode); }
 
     auto mode() const noexcept { return mode_; }
-    void mode(firmata::mode mode) { fn_mode_(*this, mode); }
+    void mode(firmata::mode mode) const { fn_mode_(digital_, mode); }
 
     auto res() const noexcept { return reses_.at(mode_); }
 
     auto value() const noexcept { return value_; }
-    void value(int value) { fn_value_(*this, value); }
+    void value(int value) const { fn_value_(digital_, value); }
 
     auto state() const noexcept { return state_; }
 
 protected:
     ////////////////////
-    using fn_mode = std::function<void(pin&, firmata::mode)>;
-    using fn_value = std::function<void(pin&, int)>;
-
     class delegate
     {
         pin* pin_;
@@ -93,8 +90,12 @@ protected:
     // through the delegate class
     delegate delegate_ { this };
 
-    pin(firmata::pos pos, fn_mode fm, fn_value fv) :
-        digital_(pos), fn_mode_(fm), fn_value_(fv)
+    // mode and value setters (handled by control)
+    using fn_mode = std::function<void(firmata::pos, firmata::mode)>;
+    using fn_value = std::function<void(firmata::pos, int)>;
+
+    pin(firmata::pos pos, fn_mode mode, fn_value value) :
+        digital_(pos), fn_mode_(std::move(mode)), fn_value_(std::move(value))
     { }
 
     friend class control;

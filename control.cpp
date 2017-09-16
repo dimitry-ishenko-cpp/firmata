@@ -84,8 +84,8 @@ void control::query_capability()
     auto data = read_until(capability_response);
 
     using namespace std::placeholders;
-    auto fn_mode = std::bind(&control::mode, this, _1, _2);
-    auto fn_value = std::bind(&control::value, this, _1, _2);
+    auto fn_mode = std::bind(&control::fn_mode, this, _1, _2);
+    auto fn_value = std::bind(&control::fn_value, this, _1, _2);
 
     firmata::pos pos = 0;
     firmata::pin pin(pos, fn_mode, fn_value);
@@ -157,16 +157,18 @@ void control::report_all()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::mode(firmata::pin& pin, firmata::mode mode)
+void control::fn_mode(pos digital, mode value)
 {
+    auto& pin = pins_.at(digital);
+
     if(is_input(pin.mode()))
     {
         if(is_digital(pin.mode())) report_digital(pin.pos(), false);
         else if(is_analog(pin.mode())) report_analog(pin.analog_pos(), false);
     }
 
-    pin.delegate_.mode(mode);
-    pin_mode(pin.pos(), mode);
+    pin.delegate_.mode(value);
+    pin_mode(pin.pos(), value);
 
     if(is_input(pin.mode()))
     {
@@ -176,8 +178,10 @@ void control::mode(firmata::pin& pin, firmata::mode mode)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::value(firmata::pin& pin, int value)
+void control::fn_value(pos digital, int value)
 {
+    auto& pin = pins_.at(digital);
+
     if(is_digital(pin.mode()))
     {
         pin.delegate_.value(value);
