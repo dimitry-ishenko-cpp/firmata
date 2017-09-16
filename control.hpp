@@ -28,6 +28,7 @@ class control
 public:
     ////////////////////
     explicit control(io::base*);
+    ~control() noexcept { io_->reset_async(); }
 
     ////////////////////
     auto const& protocol() const noexcept { return protocol_; }
