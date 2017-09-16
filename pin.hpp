@@ -56,12 +56,12 @@ public:
     bool supports(firmata::mode mode) const noexcept { return modes_.count(mode); }
 
     auto mode() const noexcept { return mode_; }
-    void mode(firmata::mode mode) { if(fn_mode_) fn_mode_(*this, mode); }
+    void mode(firmata::mode mode) { fn_mode_(*this, mode); }
 
     auto res() const noexcept { return reses_.at(mode_); }
 
     auto value() const noexcept { return value_; }
-    void value(int value) { if(fn_value_) fn_value_(*this, value); }
+    void value(int value) { fn_value_(*this, value); }
 
     auto state() const noexcept { return state_; }
 
@@ -97,6 +97,10 @@ protected:
     delegate delegate_ { this };
     friend class command;
     friend class control;
+
+    pin(firmata::pos pos, fn_mode fm, fn_value fv) :
+        digital_(pos), fn_mode_(fm), fn_value_(fv)
+    { }
 
 private:
     ////////////////////
