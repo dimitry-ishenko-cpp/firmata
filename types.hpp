@@ -108,9 +108,11 @@ using payload = std::vector<byte>;
 
 // convert 7-bit message data to string
 std::string to_string(payload::const_iterator begin, payload::const_iterator end);
+inline auto to_string(const payload& data) { return to_string(data.begin(), data.end()); }
 
 // convert 7-bit message data to value
 int to_value(payload::const_iterator begin, payload::const_iterator end);
+inline auto to_value(const payload& data) { return to_value(data.begin(), data.end()); }
 
 // convert string to 7-bit message data
 payload to_data(const std::string&);
