@@ -152,7 +152,7 @@ void control::report_all()
         if(is_input(pin.mode()))
         {
             if(is_digital(pin.mode())) report_digital(pin.pos(), true);
-            else if(is_analog(pin.mode())) report_analog(pin.analog_pos(), true);
+            else if(is_analog(pin.mode())) report_analog(pin.analog(), true);
         }
 }
 
@@ -164,7 +164,7 @@ void control::fn_mode(pos digital, mode value)
     if(is_input(pin.mode()))
     {
         if(is_digital(pin.mode())) report_digital(pin.pos(), false);
-        else if(is_analog(pin.mode())) report_analog(pin.analog_pos(), false);
+        else if(is_analog(pin.mode())) report_analog(pin.analog(), false);
     }
 
     pin.mode_ = value;
@@ -173,7 +173,7 @@ void control::fn_mode(pos digital, mode value)
     if(is_input(pin.mode()))
     {
         if(is_digital(pin.mode())) report_digital(pin.pos(), true);
-        else if(is_analog(pin.mode())) report_analog(pin.analog_pos(), true);
+        else if(is_analog(pin.mode())) report_analog(pin.analog(), true);
     }
 }
 
@@ -190,7 +190,7 @@ void control::fn_value(pos digital, int value)
     else if(is_analog(pin.mode()))
     {
         pin.value_ = value;
-        analog_value(pin.analog_pos(), value);
+        analog_value(pin.analog(), value);
     }
 }
 
@@ -307,8 +307,8 @@ void control::info()
     {
         cout << "PIN" << endl;
         cout << "  digital: " << int(pin.pos()) << endl;
-        if(pin.analog_pos() != npos)
-            cout << "  analog: " << int(pin.analog_pos()) << endl;
+        if(pin.analog() != npos)
+            cout << "  analog: " << int(pin.analog()) << endl;
 
         cout << "  mode: " << to_string(pin.mode()) << endl;
         cout << "  res: " << pin.res() << endl;

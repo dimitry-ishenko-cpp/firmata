@@ -37,7 +37,7 @@ public:
     void swap(pin& other) noexcept
     {
         using std::swap;
-        swap(digital_,  other.digital_ );
+        swap(pos_,      other.pos_     );
         swap(analog_,   other.analog_  );
         swap(modes_,    other.modes_   );
         swap(reses_,    other.reses_   );
@@ -49,19 +49,19 @@ public:
     }
 
     ////////////////////
-    auto pos() const noexcept { return digital_; }
-    auto analog_pos() const noexcept { return analog_; }
+    auto pos() const noexcept { return pos_; }
+    auto analog() const noexcept { return analog_; }
 
     auto const& modes() const noexcept { return modes_; }
     bool supports(firmata::mode mode) const noexcept { return modes_.count(mode); }
 
     auto mode() const noexcept { return mode_; }
-    void mode(firmata::mode mode) const { fn_mode_(digital_, mode); }
+    void mode(firmata::mode mode) const { fn_mode_(pos_, mode); }
 
     auto res() const noexcept { return reses_.at(mode_); }
 
     auto value() const noexcept { return value_; }
-    void value(int value) const { fn_value_(digital_, value); }
+    void value(int value) const { fn_value_(pos_, value); }
 
     auto state() const noexcept { return state_; }
 
@@ -72,14 +72,14 @@ protected:
     using fn_value = std::function<void(firmata::pos, int)>;
 
     pin(firmata::pos pos, fn_mode mode, fn_value value) :
-        digital_(pos), fn_mode_(std::move(mode)), fn_value_(std::move(value))
+        pos_(pos), fn_mode_(std::move(mode)), fn_value_(std::move(value))
     { }
 
     friend class control;
 
 private:
     ////////////////////
-    firmata::pos digital_ = npos, analog_ = npos;
+    firmata::pos pos_ = npos, analog_ = npos;
 
     std::set<firmata::mode> modes_;
     // resolution for each mode
