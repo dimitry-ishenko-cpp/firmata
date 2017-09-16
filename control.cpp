@@ -19,7 +19,7 @@ namespace firmata
 ////////////////////////////////////////////////////////////////////////////////
 control::control(io::base* io) : io_(io)
 {
-    reset_();
+    io_->write(firmata::reset);
 
     query_version();
     query_firmware();
@@ -38,8 +38,10 @@ control::control(io::base* io) : io_(io)
 ////////////////////////////////////////////////////////////////////////////////
 void control::reset()
 {
-    reset_();
+    io_->write(firmata::reset);
+
     query_state();
+    report_all();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -84,8 +86,8 @@ void control::query_capability()
     auto data = read_until(capability_response);
 
     using namespace std::placeholders;
-    auto fn_mode = std::bind(&control::fn_mode, this, _1, _2);
-    auto fn_value = std::bind(&control::fn_value, this, _1, _2);
+    auto fn_mode = std::bind(&control::pin_mode, this, _1, _2);
+    auto fn_value = std::bind(&control::pin_value, this, _1, _2);
 
     firmata::pos pos = 0;
     firmata::pin pin(pos, fn_mode, fn_value);
@@ -157,9 +159,9 @@ void control::report_all()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::fn_mode(pos digital, mode value)
+void control::pin_mode(firmata::pos pos, firmata::mode mode)
 {
-    auto& pin = pins_.at(digital);
+    auto& pin = pins_.at(pos);
 
     if(is_input(pin.mode()))
     {
@@ -167,8 +169,8 @@ void control::fn_mode(pos digital, mode value)
         else if(is_analog(pin.mode())) report_analog(pin.analog(), false);
     }
 
-    pin.mode_ = value;
-    pin_mode(pin.pos(), value);
+    pin.mode_ = mode;
+    io_->write(firmata::pin_mode, { pin.pos(), mode });
 
     if(is_input(pin.mode()))
     {
@@ -178,57 +180,39 @@ void control::fn_mode(pos digital, mode value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::fn_value(pos digital, int value)
+void control::pin_value(firmata::pos pos, int value)
 {
-    auto& pin = pins_.at(digital);
+    auto& pin = pins_.at(pos);
 
     if(is_digital(pin.mode()))
     {
         pin.value_ = value;
-        digital_value(pin.pos(), value);
+        io_->write(firmata::digital_value, { pin.pos(), bool(value) });
     }
     else if(is_analog(pin.mode()))
     {
+        assert(pin.analog() != npos);
+
         pin.value_ = value;
-        analog_value(pin.analog(), value);
+        if(pin.analog() <= 15 && value <= 16383)
+        {
+            auto id = static_cast<msg_id>(analog_value_base + pin.analog());
+            io_->write(id, to_data(value));
+        }
+        else
+        {
+            payload data = to_data(value);
+            data.insert(data.begin(), pin.analog());
+
+            io_->write(ext_analog_value, data);
+        }
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::pin_mode(pos digital, firmata::mode mode)
+void control::report_digital(firmata::pos pos, bool value)
 {
-    io_->write(firmata::pin_mode, { digital, mode });
-}
-
-////////////////////////////////////////////////////////////////////////////////
-void control::digital_value(pos digital, bool value)
-{
-    io_->write(firmata::digital_value, { digital, value });
-}
-
-////////////////////////////////////////////////////////////////////////////////
-void control::analog_value(pos analog, int value)
-{
-    assert(analog != npos);
-
-    if(analog <= 15 && value <= 16383)
-    {
-        auto id = static_cast<msg_id>(analog_value_base + analog);
-        io_->write(id, to_data(value));
-    }
-    else
-    {
-        payload data = to_data(value);
-        data.insert(data.begin(), analog);
-
-        io_->write(ext_analog_value, data);
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-void control::report_digital(pos digital, bool value)
-{
-    int port = digital / 8, bit = digital % 8;
+    int port = pos / 8, bit = pos % 8;
     assert(port <= 15);
 
     ports_[port].set(bit, value);
@@ -238,12 +222,12 @@ void control::report_digital(pos digital, bool value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::report_analog(pos analog, bool value)
+void control::report_analog(firmata::pos pos, bool value)
 {
-    assert(analog != npos);
-    assert(analog <= 15);
+    assert(pos != npos);
+    assert(pos <= 15);
 
-    auto id = static_cast<msg_id>(report_analog_base + analog);
+    auto id = static_cast<msg_id>(report_analog_base + pos);
     io_->write(id, { value });
 }
 
@@ -253,9 +237,6 @@ void control::sample_rate(const msec& time)
     int value = std::min<int>(time.count(), 16383);
     io_->write(firmata::sample_rate, to_data(value));
 }
-
-////////////////////////////////////////////////////////////////////////////////
-void control::reset_() { io_->write(firmata::reset); }
 
 ////////////////////////////////////////////////////////////////////////////////
 void control::async_read(msg_id, const payload&)

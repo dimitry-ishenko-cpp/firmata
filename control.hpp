@@ -65,22 +65,14 @@ private:
 
     void report_all();
 
-    void fn_mode(pos, mode);
-    void fn_value(pos, int);
-
-    ////////////////////
     void pin_mode(pos, mode);
-
-    void digital_value(pos, bool);
-    void analog_value(pos, int);
+    void pin_value(pos, int);
 
     void report_digital(pos, bool);
     void report_analog(pos, bool);
 
     using msec = std::chrono::milliseconds;
     void sample_rate(const msec&);
-
-    void reset_();
 
     void async_read(msg_id, const payload&);
 
