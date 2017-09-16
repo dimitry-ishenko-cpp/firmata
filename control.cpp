@@ -17,21 +17,6 @@ namespace firmata
 {
 
 ////////////////////////////////////////////////////////////////////////////////
-namespace
-{
-
-constexpr inline bool digital(const pin& p) noexcept
-{ return p.mode() == digital_in || p.mode() == digital_out || p.mode() == pullup_in; }
-
-constexpr inline bool analog(const pin& p) noexcept
-{ return p.mode() == analog_in || p.mode() == pwm; }
-
-constexpr inline bool input(const pin& p) noexcept
-{ return p.mode() == digital_in || p.mode() == analog_in || p.mode() == pullup_in; }
-
-}
-
-////////////////////////////////////////////////////////////////////////////////
 control::control(io::base* io) : io_(io)
 {
     reset_();
@@ -164,36 +149,36 @@ void control::query_state()
 void control::report_all()
 {
     for(auto& pin : pins_)
-        if(input(pin))
+        if(input(pin.mode()))
         {
-                if(digital(pin)) report_digital(pin, true);
-            else if(analog(pin)) report_analog(pin, true);
+                if(digital(pin.mode())) report_digital(pin, true);
+            else if(analog(pin.mode())) report_analog(pin, true);
         }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void control::mode(firmata::pin& pin, firmata::mode mode)
 {
-    if(input(pin))
+    if(input(pin.mode()))
     {
-            if(digital(pin)) report_digital(pin, false);
-        else if(analog(pin)) report_analog(pin, false);
+            if(digital(pin.mode())) report_digital(pin, false);
+        else if(analog(pin.mode())) report_analog(pin, false);
     }
 
     pin_mode(pin, mode);
 
-    if(input(pin))
+    if(input(pin.mode()))
     {
-            if(digital(pin)) report_digital(pin, true);
-        else if(analog(pin)) report_analog(pin, true);
+            if(digital(pin.mode())) report_digital(pin, true);
+        else if(analog(pin.mode())) report_analog(pin, true);
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void control::value(firmata::pin& pin, int value)
 {
-        if(digital(pin)) digital_value(pin, value);
-    else if(analog(pin)) analog_value(pin, value);
+        if(digital(pin.mode())) digital_value(pin, value);
+    else if(analog(pin.mode())) analog_value(pin, value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
