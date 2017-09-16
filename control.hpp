@@ -65,17 +65,17 @@ private:
 
     void report_all();
 
-    void mode(firmata::pin&, firmata::mode);
-    void value(firmata::pin&, int);
+    void mode(pin&, firmata::mode);
+    void value(pin&, int);
 
     ////////////////////
-    void pin_mode(firmata::pin&, firmata::mode);
+    void pin_mode(pos, firmata::mode);
 
-    void digital_value(firmata::pin&, bool);
-    void analog_value(firmata::pin&, int);
+    void digital_value(pos, bool);
+    void analog_value(pos, int);
 
-    void report_digital(const firmata::pin&, bool);
-    void report_analog(const firmata::pin&, bool);
+    void report_digital(pos, bool);
+    void report_analog(pos, bool);
 
     using msec = std::chrono::milliseconds;
     void sample_rate(const msec&);

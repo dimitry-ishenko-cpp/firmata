@@ -151,8 +151,8 @@ void control::report_all()
     for(auto& pin : pins_)
         if(input(pin.mode()))
         {
-                if(digital(pin.mode())) report_digital(pin, true);
-            else if(analog(pin.mode())) report_analog(pin, true);
+            if(digital(pin.mode())) report_digital(pin.pos(), true);
+            else if(analog(pin.mode())) report_analog(pin.analog_pos(), true);
         }
 }
 
@@ -161,64 +161,70 @@ void control::mode(firmata::pin& pin, firmata::mode mode)
 {
     if(input(pin.mode()))
     {
-            if(digital(pin.mode())) report_digital(pin, false);
-        else if(analog(pin.mode())) report_analog(pin, false);
+        if(digital(pin.mode())) report_digital(pin.pos(), false);
+        else if(analog(pin.mode())) report_analog(pin.analog_pos(), false);
     }
 
-    pin_mode(pin, mode);
+    pin.delegate_.mode(mode);
+    pin_mode(pin.pos(), mode);
 
     if(input(pin.mode()))
     {
-            if(digital(pin.mode())) report_digital(pin, true);
-        else if(analog(pin.mode())) report_analog(pin, true);
+        if(digital(pin.mode())) report_digital(pin.pos(), true);
+        else if(analog(pin.mode())) report_analog(pin.analog_pos(), true);
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void control::value(firmata::pin& pin, int value)
 {
-        if(digital(pin.mode())) digital_value(pin, value);
-    else if(analog(pin.mode())) analog_value(pin, value);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-void control::pin_mode(firmata::pin& pin, firmata::mode mode)
-{
-    pin.delegate_.mode(mode);
-    io_->write(firmata::pin_mode, { pin.pos(), mode });
-}
-
-////////////////////////////////////////////////////////////////////////////////
-void control::digital_value(firmata::pin& pin, bool value)
-{
-    pin.delegate_.value(value);
-    io_->write(firmata::digital_value, { pin.pos(), value });
-}
-
-////////////////////////////////////////////////////////////////////////////////
-void control::analog_value(firmata::pin& pin, int value)
-{
-    assert(pin.analog_pos() != npos);
-
-    pin.delegate_.value(value);
-    if(pin.analog_pos() <= 15 && value <= 16383)
+    if(digital(pin.mode()))
     {
-        auto id = static_cast<msg_id>(analog_value_base + pin.analog_pos());
+        pin.delegate_.value(value);
+        digital_value(pin.pos(), value);
+    }
+    else if(analog(pin.mode()))
+    {
+        pin.delegate_.value(value);
+        analog_value(pin.analog_pos(), value);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void control::pin_mode(pos digital, firmata::mode mode)
+{
+    io_->write(firmata::pin_mode, { digital, mode });
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void control::digital_value(pos digital, bool value)
+{
+    io_->write(firmata::digital_value, { digital, value });
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void control::analog_value(pos analog, int value)
+{
+    assert(analog != npos);
+
+    if(analog <= 15 && value <= 16383)
+    {
+        auto id = static_cast<msg_id>(analog_value_base + analog);
         io_->write(id, to_data(value));
     }
     else
     {
         payload data = to_data(value);
-        data.insert(data.begin(), pin.analog_pos());
+        data.insert(data.begin(), analog);
 
         io_->write(ext_analog_value, data);
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::report_digital(const firmata::pin& pin, bool value)
+void control::report_digital(pos digital, bool value)
 {
-    int port = pin.pos() / 8, bit = pin.pos() % 8;
+    int port = digital / 8, bit = digital % 8;
     assert(port <= 15);
 
     ports_[port].set(bit, value);
@@ -228,12 +234,12 @@ void control::report_digital(const firmata::pin& pin, bool value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::report_analog(const firmata::pin& pin, bool value)
+void control::report_analog(pos analog, bool value)
 {
-    assert(pin.analog_pos() != npos);
-    assert(pin.analog_pos() <= 15);
+    assert(analog != npos);
+    assert(analog <= 15);
 
-    auto id = static_cast<msg_id>(report_analog_base + pin.analog_pos());
+    auto id = static_cast<msg_id>(report_analog_base + analog);
     io_->write(id, { value });
 }
 
