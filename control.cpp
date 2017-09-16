@@ -149,41 +149,41 @@ void control::query_state()
 void control::report_all()
 {
     for(auto& pin : pins_)
-        if(input(pin.mode()))
+        if(is_input(pin.mode()))
         {
-            if(digital(pin.mode())) report_digital(pin.pos(), true);
-            else if(analog(pin.mode())) report_analog(pin.analog_pos(), true);
+            if(is_digital(pin.mode())) report_digital(pin.pos(), true);
+            else if(is_analog(pin.mode())) report_analog(pin.analog_pos(), true);
         }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void control::mode(firmata::pin& pin, firmata::mode mode)
 {
-    if(input(pin.mode()))
+    if(is_input(pin.mode()))
     {
-        if(digital(pin.mode())) report_digital(pin.pos(), false);
-        else if(analog(pin.mode())) report_analog(pin.analog_pos(), false);
+        if(is_digital(pin.mode())) report_digital(pin.pos(), false);
+        else if(is_analog(pin.mode())) report_analog(pin.analog_pos(), false);
     }
 
     pin.delegate_.mode(mode);
     pin_mode(pin.pos(), mode);
 
-    if(input(pin.mode()))
+    if(is_input(pin.mode()))
     {
-        if(digital(pin.mode())) report_digital(pin.pos(), true);
-        else if(analog(pin.mode())) report_analog(pin.analog_pos(), true);
+        if(is_digital(pin.mode())) report_digital(pin.pos(), true);
+        else if(is_analog(pin.mode())) report_analog(pin.analog_pos(), true);
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void control::value(firmata::pin& pin, int value)
 {
-    if(digital(pin.mode()))
+    if(is_digital(pin.mode()))
     {
         pin.delegate_.value(value);
         digital_value(pin.pos(), value);
     }
-    else if(analog(pin.mode()))
+    else if(is_analog(pin.mode()))
     {
         pin.delegate_.value(value);
         analog_value(pin.analog_pos(), value);
