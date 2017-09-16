@@ -249,9 +249,34 @@ void control::sample_rate(const msec& time)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::async_read(msg_id, const payload&)
+void control::async_read(msg_id id, const payload& data)
 {
+    if(id >= port_value_base && id < port_value_end)
+    {
+        auto pos = 8 * static_cast<int>(id - port_value_base);
+        auto value = to_value(data);
 
+        for(auto bit = 0; bit < 8; ++bit, ++pos)
+        {
+            auto& pin = pins_.at(pos);
+
+            if(is_input(pin.mode()) && is_digital(pin.mode()))
+                pin.state_ = bool(value & (1 << bit));
+        }
+    }
+    else if(id >= analog_value_base && id < analog_value_end)
+    {
+        auto pos = static_cast<firmata::pos>(id - analog_value_base);
+
+        for(auto& pin : pins_)
+            if(pin.analog() == pos)
+            {
+                if(is_input(pin.mode()) && is_analog(pin.mode()))
+                    pin.state_ = to_value(data);
+                break;
+            }
+    }
+    else if(id == string_data) string_ = to_string(data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
