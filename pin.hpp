@@ -42,10 +42,10 @@ public:
         swap(modes_,    other.modes_   );
         swap(reses_,    other.reses_   );
         swap(mode_,     other.mode_    );
-        swap(value_,    other.value_   );
-        swap(state_,    other.state_   );
         swap(fn_mode_,  other.fn_mode_ );
+        swap(value_,    other.value_   );
         swap(fn_value_, other.fn_value_);
+        swap(state_,    other.state_   );
     }
 
     ////////////////////
@@ -67,29 +67,6 @@ public:
 
 protected:
     ////////////////////
-    class delegate
-    {
-        pin* pin_;
-
-    public:
-        explicit delegate(pin* p) : pin_(p) { }
-
-        void digital(firmata::pos digital) { pin_->digital_ = digital; }
-        void analog(firmata::pos analog) { pin_->analog_ = analog; }
-
-        void add(firmata::mode mode) { pin_->modes_.insert(mode); }
-        void add(firmata::mode mode, firmata::res res) { pin_->reses_.emplace(mode, res); }
-
-        void mode(firmata::mode mode) { pin_->mode_ = mode; }
-
-        void value(int value) { pin_->value_ = value; }
-        void state(int value) { pin_->state_ = value; }
-    };
-
-    // control class modifies internal pin state
-    // through the delegate class
-    delegate delegate_ { this };
-
     // mode and value setters (handled by control)
     using fn_mode = std::function<void(firmata::pos, firmata::mode)>;
     using fn_value = std::function<void(firmata::pos, int)>;
@@ -109,13 +86,12 @@ private:
     std::map<firmata::mode, firmata::res> reses_;
 
     firmata::mode mode_;
+    fn_mode fn_mode_;
 
     int value_ = 0;
-    int state_ = 0;
-
-    ////////////////////
-    fn_mode fn_mode_;
     fn_value fn_value_;
+
+    int state_ = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

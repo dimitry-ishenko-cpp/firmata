@@ -103,8 +103,8 @@ void control::query_capability()
             auto mode = static_cast<firmata::mode>(*ci);
             auto res = static_cast<firmata::res>(*++ci);
 
-            pin.delegate_.add(mode);
-            pin.delegate_.add(mode, res);
+            pin.modes_.insert(mode);
+            pin.reses_.emplace(mode, res);
         }
 
     // ensure no garbage at end
@@ -122,7 +122,7 @@ void control::query_analog_mapping()
         if(*ci != 0x7f)
         {
             assert(pi < pins_.end());
-            pi->delegate_.analog(*ci);
+            pi->analog_ = *ci;
         }
 }
 
@@ -140,8 +140,8 @@ void control::query_state()
         auto mode = static_cast<firmata::mode>(data[1]);
         auto state = to_value(data.begin() + 2, data.end());
 
-        pin.delegate_.mode(mode);
-        pin.delegate_.state(state);
+        pin.mode_ = mode;
+        pin.state_ = state;
     }
 }
 
@@ -167,7 +167,7 @@ void control::fn_mode(pos digital, mode value)
         else if(is_analog(pin.mode())) report_analog(pin.analog_pos(), false);
     }
 
-    pin.delegate_.mode(value);
+    pin.mode_ = value;
     pin_mode(pin.pos(), value);
 
     if(is_input(pin.mode()))
@@ -184,12 +184,12 @@ void control::fn_value(pos digital, int value)
 
     if(is_digital(pin.mode()))
     {
-        pin.delegate_.value(value);
+        pin.value_ = value;
         digital_value(pin.pos(), value);
     }
     else if(is_analog(pin.mode()))
     {
-        pin.delegate_.value(value);
+        pin.value_ = value;
         analog_value(pin.analog_pos(), value);
     }
 }
