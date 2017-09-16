@@ -293,11 +293,9 @@ void control::info()
          << firmware().major << "." << firmware().minor
          << endl;
 
-    for(auto n = 0; n < pin_count(); ++n)
+    for(auto& pin : pins_)
     {
         cout << "PIN" << endl;
-        auto& pin = this->pin(n);
-
         cout << "  digital: " << int(pin.pos()) << endl;
         if(pin.analog_pos() != npos)
             cout << "  analog: " << int(pin.analog_pos()) << endl;

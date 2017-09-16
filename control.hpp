@@ -39,10 +39,7 @@ public:
     void sample_rate(const std::chrono::duration<Rep, Period>&);
 
     ////////////////////
-    auto pin_count() const noexcept { return pins_.size(); }
-
-    auto const& pin(pos n) const { return pins_.at(n); }
-    auto& pin(pos n) { return pins_.at(n); }
+    auto const& pins() const noexcept { return pins_; }
 
 private:
     ////////////////////
