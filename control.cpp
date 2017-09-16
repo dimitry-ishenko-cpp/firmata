@@ -221,10 +221,14 @@ void control::report_digital(firmata::pos pos, bool value)
     int port = pos / 8, bit = pos % 8;
     assert(port <= 15);
 
+    bool before = ports_[port].any();
     ports_[port].set(bit, value);
+    bool now = ports_[port].any();
 
     auto id = static_cast<msg_id>(report_port_base + port);
-    io_->write(id, { ports_[port].any() });
+
+    if(before && !now) io_->write(id, { false });
+    else if(!before && now) io_->write(id, { true });
 }
 
 ////////////////////////////////////////////////////////////////////////////////
