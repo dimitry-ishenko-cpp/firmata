@@ -17,6 +17,7 @@
 #include <bitset>
 #include <chrono>
 #include <map>
+#include <string>
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace firmata
@@ -36,6 +37,9 @@ public:
 
     void reset();
 
+    void string(const std::string&);
+    auto const& string() const noexcept { return string_; }
+
     template<typename Rep, typename Period>
     void sample_rate(const std::chrono::duration<Rep, Period>&);
 
@@ -49,6 +53,7 @@ private:
     firmata::protocol protocol_;
     firmata::firmware firmware_;
     firmata::pins pins_;
+    std::string string_;
 
     // ports that are currently being monitored
     std::map<int, std::bitset<8>> ports_;
