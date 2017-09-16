@@ -30,8 +30,8 @@ public:
     explicit control(io::base*);
 
     ////////////////////
-    auto const& protocol() const { return protocol_; }
-    auto const& firmware() const { return firmware_; }
+    auto const& protocol() const noexcept { return protocol_; }
+    auto const& firmware() const noexcept { return firmware_; }
 
     void reset();
 
