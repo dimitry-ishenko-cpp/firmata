@@ -112,6 +112,9 @@ std::string to_string(payload::const_iterator begin, payload::const_iterator end
 // convert 7-bit message data to value
 int to_value(payload::const_iterator begin, payload::const_iterator end);
 
+// convert string to 7-bit message data
+payload to_data(const std::string&);
+
 // convert value to 7-bit message data
 payload to_data(int);
 

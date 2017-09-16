@@ -35,6 +35,18 @@ int to_value(payload::const_iterator begin, payload::const_iterator end)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+payload to_data(const std::string& s)
+{
+    payload data;
+    for(auto c : s)
+    {
+        data.push_back(byte(c) & 0x7f);
+        data.push_back(byte(c) >> 7);
+    }
+    return data;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 payload to_data(int value)
 {
     payload data;
