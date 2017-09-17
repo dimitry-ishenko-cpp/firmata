@@ -42,10 +42,9 @@ public:
         swap(modes_,    other.modes_   );
         swap(reses_,    other.reses_   );
         swap(mode_,     other.mode_    );
-        swap(fn_mode_,  other.fn_mode_ );
         swap(value_,    other.value_   );
-        swap(fn_value_, other.fn_value_);
         swap(state_,    other.state_   );
+        swap(delegate_, other.delegate_);
     }
 
     ////////////////////
@@ -56,26 +55,14 @@ public:
     bool supports(firmata::mode mode) const noexcept { return modes_.count(mode); }
 
     auto mode() const noexcept { return mode_; }
-    void mode(firmata::mode mode) const { fn_mode_(pos_, mode); }
+    void mode(firmata::mode);
 
     auto res() const noexcept { return reses_.at(mode_); }
 
     auto value() const noexcept { return value_; }
-    void value(int value) const { fn_value_(pos_, value); }
+    void value(int);
 
     auto state() const noexcept { return state_; }
-
-protected:
-    ////////////////////
-    // mode and value setters (handled by control)
-    using fn_mode = std::function<void(firmata::pos, firmata::mode)>;
-    using fn_value = std::function<void(firmata::pos, int)>;
-
-    pin(firmata::pos pos, fn_mode mode, fn_value value) :
-        pos_(pos), fn_mode_(std::move(mode)), fn_value_(std::move(value))
-    { }
-
-    friend class control;
 
 private:
     ////////////////////
@@ -86,12 +73,22 @@ private:
     std::map<firmata::mode, firmata::res> reses_;
 
     firmata::mode mode_;
-    fn_mode fn_mode_;
-
     int value_ = 0;
-    fn_value fn_value_;
-
     int state_ = 0;
+
+    ////////////////////
+    struct
+    {
+        using pos = firmata::pos;
+        using mode = firmata::mode;
+
+        std::function<void(pin*, mode /*now*/, mode /*before*/)> pin_mode;
+        std::function<void(pin*, bool)> digital_value;
+        std::function<void(pin*, int)> analog_value;
+    }
+    delegate_;
+
+    friend class control;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

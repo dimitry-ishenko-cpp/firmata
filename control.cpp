@@ -121,16 +121,20 @@ void control::query_capability()
     auto data = read_until(capability_response);
 
     using namespace std::placeholders;
-    auto fn_mode = std::bind(&control::pin_mode, this, _1, _2);
-    auto fn_value = std::bind(&control::pin_value, this, _1, _2);
+    auto pin_mode      = std::bind(&control::pin_mode, this, _1, _2, _3);
+    auto digital_value = std::bind(&control::digital_value, this, _1, _2);
+    auto analog_value  = std::bind(&control::analog_value, this, _1, _2);
 
     firmata::pos pos = 0;
-    firmata::pin pin(pos, fn_mode, fn_value);
+    firmata::pin pin;
 
     for(auto ci = data.begin(); ci < data.end(); ++ci)
         if(*ci == 0x7f)
         {
-            pins_.push_back(firmata::pin(++pos, fn_mode, fn_value));
+            pin.pos_ = pos++;
+            pin.delegate_ = { pin_mode, digital_value, analog_value };
+
+            pins_.push_back(firmata::pin());
 
             using std::swap;
             swap(pin, pins_.back());
@@ -188,66 +192,58 @@ void control::report_all()
     for(auto& pin : pins_)
         if(is_input(pin.mode()))
         {
-            if(is_digital(pin.mode())) report_digital(pin.pos(), true);
-            else if(is_analog(pin.mode())) report_analog(pin.analog(), true);
+            if(is_digital(pin.mode())) report_digital(&pin, true);
+            else if(is_analog(pin.mode())) report_analog(&pin, true);
         }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::pin_mode(firmata::pos pos, firmata::mode mode)
+void control::pin_mode(firmata::pin* pin, mode now, mode before)
 {
-    auto& pin = pins_.at(pos);
-
-    if(is_input(pin.mode()))
+    if(is_input(before))
     {
-        if(is_digital(pin.mode())) report_digital(pin.pos(), false);
-        else if(is_analog(pin.mode())) report_analog(pin.analog(), false);
+        if(is_digital(before)) report_digital(pin, false);
+        else if(is_analog(before)) report_analog(pin, false);
     }
 
-    pin.mode_ = mode;
-    io_->write(firmata::pin_mode, { pin.pos(), mode });
+    io_->write(firmata::pin_mode, { pin->pos(), now });
 
-    if(is_input(pin.mode()))
+    if(is_input(now))
     {
-        if(is_digital(pin.mode())) report_digital(pin.pos(), true);
-        else if(is_analog(pin.mode())) report_analog(pin.analog(), true);
+        if(is_digital(now)) report_digital(pin, true);
+        else if(is_analog(now)) report_analog(pin, true);
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::pin_value(firmata::pos pos, int value)
+void control::digital_value(firmata::pin* pin, bool value)
 {
-    auto& pin = pins_.at(pos);
+    io_->write(firmata::digital_value, { pin->pos(), value });
+}
 
-    if(is_digital(pin.mode()))
+////////////////////////////////////////////////////////////////////////////////
+void control::analog_value(firmata::pin* pin, int value)
+{
+    assert(pin->analog() != npos);
+
+    if(pin->analog() <= 15 && value <= 16383)
     {
-        pin.value_ = value;
-        io_->write(firmata::digital_value, { pin.pos(), bool(value) });
+        auto id = static_cast<msg_id>(analog_value_base + pin->analog());
+        io_->write(id, to_data(value));
     }
-    else if(is_analog(pin.mode()))
+    else
     {
-        assert(pin.analog() != npos);
+        payload data = to_data(value);
+        data.insert(data.begin(), pin->analog());
 
-        pin.value_ = value;
-        if(pin.analog() <= 15 && value <= 16383)
-        {
-            auto id = static_cast<msg_id>(analog_value_base + pin.analog());
-            io_->write(id, to_data(value));
-        }
-        else
-        {
-            payload data = to_data(value);
-            data.insert(data.begin(), pin.analog());
-
-            io_->write(ext_analog_value, data);
-        }
+        io_->write(ext_analog_value, data);
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::report_digital(firmata::pos pos, bool value)
+void control::report_digital(firmata::pin* pin, bool value)
 {
-    int port = pos / 8, bit = pos % 8;
+    int port = pin->pos() / 8, bit = pin->pos() % 8;
     assert(port <= 15);
 
     bool before = ports_[port].any();
@@ -261,12 +257,12 @@ void control::report_digital(firmata::pos pos, bool value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::report_analog(firmata::pos pos, bool value)
+void control::report_analog(firmata::pin* pin, bool value)
 {
-    assert(pos != npos);
-    assert(pos <= 15);
+    assert(pin->analog() != npos);
+    assert(pin->analog() <= 15);
 
-    auto id = static_cast<msg_id>(report_analog_base + pos);
+    auto id = static_cast<msg_id>(report_analog_base + pin->analog());
     io_->write(id, { value });
 }
 
