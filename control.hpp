@@ -16,8 +16,10 @@
 
 #include <bitset>
 #include <chrono>
+#include <functional>
 #include <map>
 #include <string>
+#include <vector>
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace firmata
@@ -37,11 +39,15 @@ public:
 
     void reset();
 
+    template<typename Rep, typename Period>
+    void sample_rate(const std::chrono::duration<Rep, Period>&);
+
+    ////////////////////
     void string(const std::string&);
     auto const& string() const noexcept { return string_; }
 
-    template<typename Rep, typename Period>
-    void sample_rate(const std::chrono::duration<Rep, Period>&);
+    using string_callback = std::function<void(const std::string&)>;
+    void on_string_changed(string_callback fn);
 
     ////////////////////
     auto pin_begin() noexcept { return pins_.begin(); }
@@ -77,6 +83,9 @@ private:
     firmata::firmware firmware_;
     firmata::pins pins_;
     std::string string_;
+
+    std::vector<string_callback> string_callback_;
+    void change_string(std::string);
 
     // ports that are currently being monitored
     std::map<int, std::bitset<8>> ports_;

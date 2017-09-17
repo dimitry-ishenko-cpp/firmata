@@ -80,6 +80,20 @@ const firmata::pin& control::analog(firmata::pos pos) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+void control::on_string_changed(control::string_callback fn)
+{ string_callback_.push_back(std::move(fn)); }
+
+////////////////////////////////////////////////////////////////////////////////
+void control::change_string(std::string string)
+{
+    if(string != string_)
+    {
+        string_ = std::move(string);
+        for(auto& fn : string_callback_) fn(string_);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 payload control::read_until(msg_id reply_id)
 {
     msg_id id;
@@ -301,7 +315,7 @@ void control::async_read(msg_id id, const payload& data)
                 break;
             }
     }
-    else if(id == string_data) string_ = to_string(data);
+    else if(id == string_data) change_string(to_string(data));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
