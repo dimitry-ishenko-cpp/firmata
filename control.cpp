@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <functional>
 #include <iostream>
+#include <stdexcept>
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace firmata
@@ -48,6 +49,34 @@ void control::reset()
 void control::string(const std::string& string)
 {
     io_->write(string_data, to_data(string));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+std::size_t control::analog_count() const
+{
+    return std::count_if(pin_cbegin(), pin_cend(),
+        [](auto& pin){ return pin.analog() != npos; }
+    );
+}
+
+////////////////////////////////////////////////////////////////////////////////
+firmata::pin& control::analog(firmata::pos pos)
+{
+    auto ni = std::find_if(pin_begin(), pin_end(),
+        [=](auto& pin){ return pin.analog() == pos; }
+    );
+    return ni == pin_end() ? throw std::out_of_range("firmata::control::analog(): pin not found")
+                           : *ni;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+const firmata::pin& control::analog(firmata::pos pos) const
+{
+    auto ni = std::find_if(pin_cbegin(), pin_cend(),
+        [=](auto& pin){ return pin.analog() == pos; }
+    );
+    return ni == pin_end() ? throw std::out_of_range("firmata::control::analog(): pin not found")
+                           : *ni;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

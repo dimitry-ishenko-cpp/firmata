@@ -65,6 +65,10 @@ public:
     auto& pin(pos n) { return pins_.at(n); }
     auto const& pin(pos n) const { return pins_.at(n); }
 
+    std::size_t analog_count() const;
+    firmata::pin& analog(pos);
+    const firmata::pin& analog(pos) const;
+
 private:
     ////////////////////
     io::base* io_;
