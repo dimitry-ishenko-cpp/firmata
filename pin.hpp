@@ -62,7 +62,11 @@ public:
     auto value() const noexcept { return value_; }
     void value(int);
 
+    ////////////////////
     auto state() const noexcept { return state_; }
+
+    using state_callback = std::function<void(int)>;
+    void on_state_changed(state_callback);
 
 private:
     ////////////////////
@@ -74,7 +78,10 @@ private:
 
     firmata::mode mode_;
     int value_ = 0;
+
     int state_ = 0;
+    std::vector<state_callback> state_callback_;
+    void change_state(int);
 
     ////////////////////
     struct

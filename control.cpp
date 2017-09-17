@@ -196,7 +196,7 @@ void control::query_state()
         auto state = to_value(data.begin() + 2, data.end());
 
         pin.mode_ = mode;
-        pin.state_ = state;
+        pin.change_state(state);
     }
 }
 
@@ -295,12 +295,12 @@ void control::async_read(msg_id id, const payload& data)
         auto pos = 8 * static_cast<int>(id - port_value_base);
         auto value = to_value(data);
 
-        for(auto bit = 0; bit < 8; ++bit, ++pos)
+        for(auto n = 0; n < 8; ++n, ++pos)
         {
             auto& pin = pins_.at(pos);
 
             if(is_input(pin.mode()) && is_digital(pin.mode()))
-                pin.state_ = bool(value & (1 << bit));
+                pin.change_state(bool(value & (1 << n)));
         }
     }
     else if(id >= analog_value_base && id < analog_value_end)
@@ -311,7 +311,7 @@ void control::async_read(msg_id id, const payload& data)
             if(pin.analog() == pos)
             {
                 if(is_input(pin.mode()) && is_analog(pin.mode()))
-                    pin.state_ = to_value(data);
+                    pin.change_state(to_value(data));
                 break;
             }
     }
