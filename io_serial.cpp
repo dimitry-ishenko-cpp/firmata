@@ -9,6 +9,7 @@
 #include "firmata/io_serial.hpp"
 
 #include <asio.hpp>
+#include <algorithm>
 #include <iterator>
 #include <utility>
 
@@ -95,6 +96,12 @@ std::tuple<msg_id, payload> serial::parse_one()
 
     do
     {
+        // discard garbage
+        auto gi = std::find_if(overall_.begin(), overall_.end(),
+            [](auto ch){ return ch >= 0x80 && ch != end_sysex; }
+        );
+        overall_.erase(overall_.begin(), gi);
+
         // check for minimum message size
         if(overall_.size() < 3) break;
 
