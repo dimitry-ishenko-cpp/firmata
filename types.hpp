@@ -166,8 +166,7 @@ constexpr inline bool is_input(mode m) noexcept
 { return m == digital_in || m == analog_in || m == pullup_in; }
 
 constexpr inline bool is_output(mode m) noexcept
-{ return m == digital_out || m == pwm || m == servo; }
-
+{ return m == digital_out || m == pwm; }
 
 // mode resolution
 using res = bits;
