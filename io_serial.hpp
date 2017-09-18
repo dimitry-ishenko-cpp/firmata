@@ -15,9 +15,9 @@
 
 #include <asio/io_service.hpp>
 #include <asio/serial_port.hpp>
-#include <asio/streambuf.hpp>
 #include <string>
 #include <tuple>
+#include <vector>
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace firmata
@@ -62,13 +62,14 @@ private:
     ////////////////////
     asio::serial_port port_;
 
+    std::vector<byte> overall_;
+    char one_[128];
+
     void sched_async();
 
-    asio::streambuf store_;
     std::tuple<msg_id, payload> parse_one();
 
-    void async_read(const asio::error_code&);
-
+    void async_read(const asio::error_code&, std::size_t);
     callback fn_;
 };
 

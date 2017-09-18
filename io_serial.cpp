@@ -9,6 +9,7 @@
 #include "firmata/io_serial.hpp"
 
 #include <asio.hpp>
+#include <iterator>
 #include <utility>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -49,15 +50,17 @@ std::tuple<msg_id, payload> serial::read()
     msg_id id;
     payload data;
 
-    asio::read(port_, store_, asio::transfer_at_least(3));
-    std::tie(id, data) = parse_one();
-
-    // must be partial sysex message
-    if(data.empty())
+    do
     {
-        asio::read_until(port_, store_, end_sysex);
+        // read into one buffer
+        auto n = port_.read_some(asio::buffer(one_));
+
+        // copy data into overall buffer
+        overall_.insert(overall_.end(), std::begin(one_), std::next(one_, n));
+
         std::tie(id, data) = parse_one();
     }
+    while(data.empty());
 
     return std::make_tuple(id, std::move(data));
 }
@@ -78,29 +81,27 @@ void serial::reset_async(callback fn)
 ////////////////////////////////////////////////////////////////////////////////
 void serial::sched_async()
 {
-    asio::async_read(port_, store_,
-        asio::transfer_at_least(3),
-        std::bind(&serial::async_read, this, std::placeholders::_1)
+    // read into one buffer
+    port_.async_read_some(asio::buffer(one_),
+        std::bind(&serial::async_read, this, std::placeholders::_1, std::placeholders::_2)
     );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 std::tuple<msg_id, payload> serial::parse_one()
 {
-    msg_id id = no_id;
+    msg_id id;
     payload data;
 
     do
     {
-        // need at least 3 bytes (minimum message size)
-        if(store_.size() < 3) break;
+        // check for minimum message size
+        if(overall_.size() < 3) break;
 
-        auto begin = asio::buffers_begin(store_.data());
-        auto end = asio::buffers_end(store_.data());
-        auto ci = begin;
+        auto ci = overall_.begin();
 
         // get message id
-        id = static_cast<msg_id>(byte(*ci++));
+        id = static_cast<msg_id>(*ci++);
 
         // if this is a sysex message, get sysex id
         if(is_sysex(id))
@@ -110,27 +111,26 @@ std::tuple<msg_id, payload> serial::parse_one()
             // if this is an extended sysex message, get extended id
             if(is_ext_sysex(id))
             {
-                // need 2 more bytes for extended id
-                if(store_.size() < 4) break;
-
+                // need 2 bytes for extended id
+                if(overall_.size() < 4) break;
                 id = ext_sysex(word(*ci++) + (word(*ci++) << 7));
             }
 
             // find end_sysex
-            for(auto ci_end = ci; ci_end != end; ++ci_end)
-                if(byte(*ci_end) == end_sysex)
+            for(auto ci_end = ci; ci_end != overall_.end(); ++ci_end)
+                if(*ci_end == end_sysex)
                 {
                     data.insert(data.end(), ci, ci_end);
-                    store_.consume(ci_end - begin + 1);
-
+                    overall_.erase(overall_.begin(), std::next(ci_end)); // chomp end_sysex
                     break;
                 }
         }
         else
         {
             // standard message
-            data.insert(data.end(), ci, ci + 2);
-            store_.consume(3);
+            auto ci_end = ci + 2;
+            data.insert(data.end(), ci, ci_end);
+            overall_.erase(overall_.begin(), ci_end);
         }
     }
     while(false);
@@ -139,17 +139,19 @@ std::tuple<msg_id, payload> serial::parse_one()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void serial::async_read(const asio::error_code& ec)
+void serial::async_read(const asio::error_code& ec, std::size_t n)
 {
     if(ec) return;
 
-    while(store_.size() >= 3)
+    // copy data into overall buffer
+    overall_.insert(overall_.end(), std::begin(one_), std::next(one_, n));
+
+    for(;;)
     {
         msg_id id;
         payload data;
         std::tie(id, data) = parse_one();
 
-        // incomplete or no message
         if(data.empty()) break;
 
         if(fn_) fn_(id, data);
