@@ -32,7 +32,7 @@ void pin::mode(firmata::mode mode)
 ////////////////////////////////////////////////////////////////////////////////
 void pin::value(int value)
 {
-    if(is_digital(mode_))
+    if(mode_ == digital_out)
     {
         if(delegate_.digital_value)
         {
@@ -40,7 +40,7 @@ void pin::value(int value)
             delegate_.digital_value(this, value_);
         }
     }
-    else if(is_analog(mode_))
+    else if(mode_ == pwm)
     {
         if(delegate_.analog_value)
         {
