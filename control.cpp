@@ -236,20 +236,10 @@ void control::digital_value(firmata::pin* pin, bool value)
 ////////////////////////////////////////////////////////////////////////////////
 void control::analog_value(firmata::pin* pin, int value)
 {
-    assert(pin->analog() != npos);
+    payload data = to_data(value);
+    data.insert(data.begin(), pin->pos());
 
-    if(pin->analog() <= 15 && value <= 16383)
-    {
-        auto id = static_cast<msg_id>(analog_value_base + pin->analog());
-        io_->write(id, to_data(value));
-    }
-    else
-    {
-        payload data = to_data(value);
-        data.insert(data.begin(), pin->analog());
-
-        io_->write(ext_analog_value, data);
-    }
+    io_->write(ext_analog_value, data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
