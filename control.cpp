@@ -98,9 +98,7 @@ payload control::read_until(msg_id reply_id)
 {
     msg_id id;
     payload data;
-
-    do { std::tie(id, data) = io_->read(); }
-    while(id != reply_id);
+    do std::tie(id, data) = io_->read(); while(id != reply_id);
 
     return data;
 }
