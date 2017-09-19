@@ -71,9 +71,12 @@ public:
     auto& pin(pos n) { return pins_.at(n); }
     auto const& pin(pos n) const { return pins_.at(n); }
 
-    std::size_t analog_count() const;
-    firmata::pin& analog(pos);
-    const firmata::pin& analog(pos) const;
+    auto& pin(analog n) { return pin(analog_in, n); }
+    auto const& pin(analog n) const { return pin(analog_in, n); }
+
+    std::size_t pin_count(mode) const noexcept;
+    firmata::pin& pin(mode, pos);
+    const firmata::pin& pin(mode, pos) const;
 
 private:
     ////////////////////

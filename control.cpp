@@ -8,7 +8,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include "firmata/control.hpp"
 
-#include <algorithm>
 #include <functional>
 #include <iostream>
 #include <stdexcept>
@@ -52,31 +51,38 @@ void control::string(const std::string& string)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::size_t control::analog_count() const
+std::size_t control::pin_count(firmata::mode mode) const noexcept
 {
-    return std::count_if(pin_cbegin(), pin_cend(),
-        [](auto& pin){ return pin.analog() != npos; }
-    );
+    std::size_t count = 0;
+    for(auto const& pin : pins_) if(pin.supports(mode)) ++count;
+
+    return count;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-firmata::pin& control::analog(firmata::pos pos)
+firmata::pin& control::pin(firmata::mode mode, firmata::pos pos)
 {
-    auto ni = std::find_if(pin_begin(), pin_end(),
-        [=](auto& pin){ return pin.analog() == pos; }
-    );
-    return ni == pin_end() ? throw std::out_of_range("firmata::control::analog(): pin not found")
-                           : *ni;
+    if(mode == analog_in)
+        for(auto& pin : pins_)
+        { if(pin.analog() == pos) return pin; }
+    else
+        for(auto& pin : pins_)
+        { if(pin.supports(mode) && 0 == pos--) return pin; }
+
+    throw std::out_of_range("firmata::control::pin(): pin not found");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-const firmata::pin& control::analog(firmata::pos pos) const
+const firmata::pin& control::pin(firmata::mode mode, firmata::pos pos) const
 {
-    auto ni = std::find_if(pin_cbegin(), pin_cend(),
-        [=](auto& pin){ return pin.analog() == pos; }
-    );
-    return ni == pin_end() ? throw std::out_of_range("firmata::control::analog(): pin not found")
-                           : *ni;
+    if(mode == analog_in)
+        for(auto const& pin : pins_)
+        { if(pin.analog() == pos) return pin; }
+    else
+        for(auto const& pin : pins_)
+        { if(pin.supports(mode) && 0 == pos--) return pin; }
+
+    throw std::out_of_range("firmata::control::pin(): pin not found");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
