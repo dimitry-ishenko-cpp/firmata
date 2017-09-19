@@ -254,9 +254,9 @@ void control::analog_value(firmata::pin* pin, int value)
 ////////////////////////////////////////////////////////////////////////////////
 void control::report_digital(firmata::pin* pin, bool value)
 {
-    int port = pin->pos() / 8, bit = pin->pos() % 8;
+    auto port = pin->pos() / 8, bit = pin->pos() % 8;
 
-    if(port <= 15)
+    if(port < ports_.size())
     {
         bool before = ports_[port].any();
         ports_[port].set(bit, value);
@@ -272,7 +272,7 @@ void control::report_digital(firmata::pin* pin, bool value)
 ////////////////////////////////////////////////////////////////////////////////
 void control::report_analog(firmata::pin* pin, bool value)
 {
-    if(pin->analog() != npos && pin->analog() <= 15)
+    if(pin->analog() != npos && pin->analog() < 16)
     {
         auto id = static_cast<msg_id>(report_analog_base + pin->analog());
         io_->write(id, { value });

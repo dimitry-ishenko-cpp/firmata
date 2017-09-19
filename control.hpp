@@ -14,10 +14,10 @@
 #include "firmata/pin.hpp"
 #include "firmata/types.hpp"
 
+#include <array>
 #include <bitset>
 #include <chrono>
 #include <functional>
-#include <map>
 #include <string>
 #include <vector>
 
@@ -88,7 +88,7 @@ private:
     void change_string(std::string);
 
     // ports that are currently being monitored
-    std::map<int, std::bitset<8>> ports_;
+    std::array<std::bitset<8>, 16> ports_;
 
     ////////////////////
     // get specific reply discarding others
