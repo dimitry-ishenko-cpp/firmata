@@ -156,18 +156,6 @@ enum mode : byte
     pullup_in   = 11,
 };
 
-constexpr inline bool is_digital(mode m) noexcept
-{ return m == digital_in || m == digital_out || m == pullup_in; }
-
-constexpr inline bool is_analog(mode m) noexcept
-{ return m == analog_in || m == pwm; }
-
-constexpr inline bool is_input(mode m) noexcept
-{ return m == digital_in || m == analog_in || m == pullup_in; }
-
-constexpr inline bool is_output(mode m) noexcept
-{ return m == digital_out || m == pwm; }
-
 // mode resolution
 using res = bits;
 

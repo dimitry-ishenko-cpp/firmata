@@ -201,30 +201,42 @@ void control::query_state()
 ////////////////////////////////////////////////////////////////////////////////
 void control::report_all()
 {
+    // enable reporting for all inputs
+    // and disable for all outputs
     for(auto& pin : pins_)
-        if(is_input(pin.mode()))
+        switch(pin.mode())
         {
-            if(is_digital(pin.mode())) report_digital(&pin, true);
-            else if(is_analog(pin.mode())) report_analog(&pin, true);
+        case digital_in:
+        case pullup_in:
+            report_digital(&pin, true);
+            break;
+
+        case digital_out:
+        case pwm:
+            report_digital(&pin, false);
+            break;
+
+        case analog_in:
+            report_analog(&pin, true);
+            break;
+
+        default: break;
         }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void control::pin_mode(firmata::pin* pin, mode now, mode before)
 {
-    if(is_input(before))
-    {
-        if(is_digital(before)) report_digital(pin, false);
-        else if(is_analog(before)) report_analog(pin, false);
-    }
+    if(before == digital_in || before == pullup_in)
+        report_digital(pin, false);
+    else if(before == analog_in)
+        report_analog(pin, false);
 
     io_->write(firmata::pin_mode, { pin->pos(), now });
 
-    if(is_input(now))
-    {
-        if(is_digital(now)) report_digital(pin, true);
-        else if(is_analog(now)) report_analog(pin, true);
-    }
+    if(now == digital_in || now == pullup_in)
+        report_digital(pin, true);
+    else if(now == analog_in) report_analog(pin, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -287,8 +299,9 @@ void control::async_read(msg_id id, const payload& data)
         {
             auto& pin = pins_.at(pos);
 
-            if(is_input(pin.mode()) && is_digital(pin.mode()))
-                pin.change_state(bool(value & (1 << n)));
+            if(pin.mode() == digital_in
+            || pin.mode() == pullup_in)
+            pin.change_state(bool(value & (1 << n)));
         }
     }
     else if(id >= analog_value_base && id < analog_value_end)
@@ -298,7 +311,7 @@ void control::async_read(msg_id id, const payload& data)
         for(auto& pin : pins_)
             if(pin.analog() == pos)
             {
-                if(is_input(pin.mode()) && is_analog(pin.mode()))
+                if(pin.mode() == analog_in)
                     pin.change_state(to_value(data));
                 break;
             }
