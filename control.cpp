@@ -109,9 +109,11 @@ void control::query_version()
     io_->write(version);
     auto data = read_until(version);
 
-    assert(data.size() == 2);
-    protocol_.major = data[0];
-    protocol_.minor = data[1];
+    if(data.size() == 2)
+    {
+        protocol_.major = data[0];
+        protocol_.minor = data[1];
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -120,10 +122,12 @@ void control::query_firmware()
     io_->write(firmware_query);
     auto data = read_until(firmware_response);
 
-    assert(data.size() >= 2);
-    firmware_.major = data[0];
-    firmware_.minor = data[1];
-    firmware_.name = to_string(data.begin() + 2, data.end());
+    if(data.size() >= 2)
+    {
+        firmware_.major = data[0];
+        firmware_.minor = data[1];
+        firmware_.name = to_string(data.begin() + 2, data.end());
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -159,9 +163,6 @@ void control::query_capability()
             pin.modes_.insert(mode);
             pin.reses_.emplace(mode, res);
         }
-
-    // ensure no garbage at end
-    assert(pin.modes().empty());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -171,12 +172,8 @@ void control::query_analog_mapping()
     auto data = read_until(analog_mapping_response);
 
     auto pi = pins_.begin();
-    for(auto ci = data.begin(); ci < data.end(); ++ci, ++pi)
-        if(*ci != 0x7f)
-        {
-            assert(pi < pins_.end());
-            pi->analog_ = *ci;
-        }
+    for(auto ci = data.begin(); ci != data.end() && pi != pins_.end(); ++ci, ++pi)
+        if(*ci != 0x7f) pi->analog_ = *ci;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -187,14 +184,14 @@ void control::query_state()
         io_->write(pin_state_query, { pin.pos() });
         auto data = read_until(pin_state_response);
 
-        assert(data.size() >= 3);
-        assert(data[0] == pin.pos());
+        if(data.size() >= 3 && data[0] == pin.pos())
+        {
+            auto mode = static_cast<firmata::mode>(data[1]);
+            auto state = to_value(data.begin() + 2, data.end());
 
-        auto mode = static_cast<firmata::mode>(data[1]);
-        auto state = to_value(data.begin() + 2, data.end());
-
-        pin.mode_ = mode;
-        pin.change_state(state);
+            pin.mode_ = mode;
+            pin.change_state(state);
+        }
     }
 }
 
@@ -258,26 +255,28 @@ void control::analog_value(firmata::pin* pin, int value)
 void control::report_digital(firmata::pin* pin, bool value)
 {
     int port = pin->pos() / 8, bit = pin->pos() % 8;
-    assert(port <= 15);
 
-    bool before = ports_[port].any();
-    ports_[port].set(bit, value);
-    bool now = ports_[port].any();
+    if(port <= 15)
+    {
+        bool before = ports_[port].any();
+        ports_[port].set(bit, value);
+        bool now = ports_[port].any();
 
-    auto id = static_cast<msg_id>(report_port_base + port);
+        auto id = static_cast<msg_id>(report_port_base + port);
 
-    if(before && !now) io_->write(id, { false });
-    else if(!before && now) io_->write(id, { true });
+        if(before && !now) io_->write(id, { false });
+        else if(!before && now) io_->write(id, { true });
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void control::report_analog(firmata::pin* pin, bool value)
 {
-    assert(pin->analog() != npos);
-    assert(pin->analog() <= 15);
-
-    auto id = static_cast<msg_id>(report_analog_base + pin->analog());
-    io_->write(id, { value });
+    if(pin->analog() != npos && pin->analog() <= 15)
+    {
+        auto id = static_cast<msg_id>(report_analog_base + pin->analog());
+        io_->write(id, { value });
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
