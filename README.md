@@ -11,6 +11,13 @@ written in modern C++ using Asio library.
 
 * [Asio C++ library.](https://think-async.com)
 
+### Installation
+
+Add as a submodule into an existing project:
+```
+git submodule add https://github.com/dimitry-ishenko/firmata.git
+```
+
 ### Usage
 
 Example:
