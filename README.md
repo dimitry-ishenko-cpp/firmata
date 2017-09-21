@@ -9,7 +9,7 @@ written in modern C++ using Asio library.
 
 * Relatively modern compiler with support for C++14.
 
-* [Asio C++ library.](https://think-async.com)
+* [Standalone Asio C++ library](https://think-async.com) or the [Boost library](https://www.boost.org).
 
 ### Installation
 
