@@ -259,7 +259,7 @@ void control::analog_value(firmata::pin* pin, int value)
 ////////////////////////////////////////////////////////////////////////////////
 void control::report_digital(firmata::pin* pin, bool value)
 {
-    auto port = pin->pos() / 8, bit = pin->pos() % 8;
+    std::size_t port = pin->pos() / 8, bit = pin->pos() % 8;
 
     if(port < ports_.size())
     {
