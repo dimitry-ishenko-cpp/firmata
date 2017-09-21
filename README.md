@@ -122,7 +122,7 @@ io.run();
 
 ## License
 
-This project is licensed under the GNU GENERAL PUBLIC LICENSE Version 3.
-See the [GPL-3.0.md](GPL-3.0.md) file for details.
+This project is distributed under the GNU GPL license. See the
+[LICENSE.md](LICENSE.md) file for details.
 
 ## Acknowledgments
