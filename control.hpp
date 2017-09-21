@@ -67,6 +67,9 @@ public:
     firmata::pin& pin(mode, pos);
     const firmata::pin& pin(mode, pos) const;
 
+    ////////////////////
+    void info(); // for debugging
+
 private:
     ////////////////////
     io_base* io_;
@@ -107,9 +110,6 @@ private:
     void sample_rate(const msec&);
 
     void async_read(msg_id, const payload&);
-
-    ////////////////////
-    void info(); // for debugging
 };
 
 ////////////////////////////////////////////////////////////////////////////////

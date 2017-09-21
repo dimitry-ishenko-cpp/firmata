@@ -28,8 +28,6 @@ control::control(io_base* io) : io_(io)
     query_state();
     report_all();
 
-    //info();
-
     using namespace std::placeholders;
     io_->reset_async(std::bind(&control::async_read, this, _1, _2));
 }
@@ -354,19 +352,18 @@ void control::info()
 {
     using namespace std;
 
-    cout << "PROTOCOL: "
+    cout << "Protocol: "
          << protocol().major << "." << protocol().minor
          << endl;
 
-    cout << "FIRMWARE: "
+    cout << "Firmware: "
          << firmware().name  << " "
          << firmware().major << "." << firmware().minor
          << endl;
 
     for(auto& pin : pins_)
     {
-        cout << "PIN" << endl;
-        cout << "  digital: " << int(pin.pos()) << endl;
+        cout << "Pin " << int(pin.pos()) << ":" << endl;
         if(pin.analog() != npos)
             cout << "  analog: " << int(pin.analog()) << endl;
 
