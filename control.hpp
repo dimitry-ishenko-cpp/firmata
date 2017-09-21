@@ -9,7 +9,7 @@
 #define FIRMATA_CONTROL_HPP
 
 ////////////////////////////////////////////////////////////////////////////////
-#include "firmata/io.hpp"
+#include "firmata/io_base.hpp"
 #include "firmata/pin.hpp"
 #include "firmata/types.hpp"
 
@@ -29,7 +29,7 @@ class control
 {
 public:
     ////////////////////
-    explicit control(io::base*);
+    explicit control(io_base*);
     ~control() noexcept { io_->reset_async(); }
 
     ////////////////////
@@ -69,7 +69,7 @@ public:
 
 private:
     ////////////////////
-    io::base* io_;
+    io_base* io_;
 
     firmata::protocol protocol_;
     firmata::firmware firmware_;

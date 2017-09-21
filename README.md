@@ -20,10 +20,10 @@ Example:
 asio::io_service io;
 
 using namespace firmata;
-using namespace firmata::io::literals;
+using namespace firmata::literals;
 
 // open serial port
-io::serial device(io, "/dev/ttyACM0");
+serial_port device(io, "/dev/ttyACM0");
 device.set(57600_baud);
 
 // connect to Firmata host

@@ -5,7 +5,7 @@
 // Distributed under the GNU GPL license. See the LICENSE.md file for details.
 
 ////////////////////////////////////////////////////////////////////////////////
-#include "firmata/io_serial.hpp"
+#include "firmata/serial_port.hpp"
 
 #include <asio.hpp>
 #include <algorithm>
@@ -15,23 +15,21 @@
 ////////////////////////////////////////////////////////////////////////////////
 namespace firmata
 {
-namespace io
-{
 
 ////////////////////////////////////////////////////////////////////////////////
-serial::serial(asio::io_service& io, const std::string& device) :
+serial_port::serial_port(asio::io_service& io, const std::string& device) :
     port_(io, device)
 { }
 
 ////////////////////////////////////////////////////////////////////////////////
-void serial::set(baud_rate    baud) { port_.set_option(asio::serial_port::baud_rate(baud)); }
-void serial::set(flow_control flow) { port_.set_option(asio::serial_port::flow_control(flow)); }
-void serial::set(parity       pari) { port_.set_option(asio::serial_port::parity(pari)); }
-void serial::set(stop_bits    bits) { port_.set_option(asio::serial_port::stop_bits(bits)); }
-void serial::set(char_size    bits) { port_.set_option(asio::serial_port::character_size(bits)); }
+void serial_port::set(baud_rate    baud) { port_.set_option(asio::serial_port::baud_rate(baud)); }
+void serial_port::set(flow_control flow) { port_.set_option(asio::serial_port::flow_control(flow)); }
+void serial_port::set(parity       pari) { port_.set_option(asio::serial_port::parity(pari)); }
+void serial_port::set(stop_bits    bits) { port_.set_option(asio::serial_port::stop_bits(bits)); }
+void serial_port::set(char_size    bits) { port_.set_option(asio::serial_port::character_size(bits)); }
 
 ////////////////////////////////////////////////////////////////////////////////
-void serial::write(msg_id id, const payload& data)
+void serial_port::write(msg_id id, const payload& data)
 {
     std::vector<asio::const_buffer> message;
 
@@ -45,7 +43,7 @@ void serial::write(msg_id id, const payload& data)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::tuple<msg_id, payload> serial::read()
+std::tuple<msg_id, payload> serial_port::read()
 {
     msg_id id;
     payload data;
@@ -66,7 +64,7 @@ std::tuple<msg_id, payload> serial::read()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void serial::reset_async(callback fn)
+void serial_port::reset_async(callback fn)
 {
     if(fn_ && !fn)
     {
@@ -79,16 +77,16 @@ void serial::reset_async(callback fn)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void serial::sched_async()
+void serial_port::sched_async()
 {
     // read into one buffer
     port_.async_read_some(asio::buffer(one_),
-        std::bind(&serial::async_read, this, std::placeholders::_1, std::placeholders::_2)
+        std::bind(&serial_port::async_read, this, std::placeholders::_1, std::placeholders::_2)
     );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::tuple<msg_id, payload> serial::parse_one()
+std::tuple<msg_id, payload> serial_port::parse_one()
 {
     msg_id id;
     payload data;
@@ -145,7 +143,7 @@ std::tuple<msg_id, payload> serial::parse_one()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void serial::async_read(const asio::error_code& ec, std::size_t n)
+void serial_port::async_read(const asio::error_code& ec, std::size_t n)
 {
     if(ec) return;
 
@@ -167,5 +165,4 @@ void serial::async_read(const asio::error_code& ec, std::size_t n)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-}
 }

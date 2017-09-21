@@ -16,7 +16,7 @@ namespace firmata
 {
 
 ////////////////////////////////////////////////////////////////////////////////
-control::control(io::base* io) : io_(io)
+control::control(io_base* io) : io_(io)
 {
     io_->write(firmata::reset);
 
