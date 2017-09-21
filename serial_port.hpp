@@ -12,8 +12,14 @@
 #include "firmata/io_base.hpp"
 #include "firmata/types.hpp"
 
-#include <asio/io_service.hpp>
-#include <asio/serial_port.hpp>
+#ifdef ASIO_STANDALONE
+    #include <asio.hpp>
+#else
+    #include <boost/asio.hpp>
+    namespace asio { using namespace boost::asio; }
+    namespace asio { using boost::system::error_code; }
+#endif
+
 #include <string>
 #include <tuple>
 #include <vector>

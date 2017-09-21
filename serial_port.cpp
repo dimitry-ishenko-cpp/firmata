@@ -7,7 +7,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include "firmata/serial_port.hpp"
 
-#include <asio.hpp>
 #include <algorithm>
 #include <iterator>
 #include <utility>
