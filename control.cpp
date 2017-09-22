@@ -16,9 +16,9 @@ namespace firmata
 {
 
 ////////////////////////////////////////////////////////////////////////////////
-control::control(io_base* io) : io_(io)
+control::control(io_base* io, bool dont_reset) : io_(io)
 {
-    io_->write(firmata::reset);
+    if(!dont_reset) io_->write(firmata::reset);
 
     query_version();
     query_firmware();

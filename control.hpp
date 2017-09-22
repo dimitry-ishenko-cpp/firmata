@@ -25,11 +25,15 @@ namespace firmata
 {
 
 ////////////////////////////////////////////////////////////////////////////////
+enum dont_reset_t { dont_reset };
+
+////////////////////////////////////////////////////////////////////////////////
 class control
 {
 public:
     ////////////////////
-    explicit control(io_base*);
+    explicit control(io_base* io) : control(io, false) { }
+    control(io_base* io, dont_reset_t) : control(io, true) { }
     ~control() noexcept { io_->read_callback(nullptr); }
 
     ////////////////////
@@ -72,6 +76,8 @@ public:
 
 private:
     ////////////////////
+    control(io_base*, bool dont_reset);
+
     io_base* io_;
 
     firmata::protocol protocol_;
