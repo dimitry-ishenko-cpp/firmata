@@ -280,7 +280,7 @@ void control::report_digital(firmata::pin* pin, bool value)
 ////////////////////////////////////////////////////////////////////////////////
 void control::report_analog(firmata::pin* pin, bool value)
 {
-    if(pin->analog() != npos && pin->analog() < 16)
+    if(pin->analog() != npos && pin->analog() < analog_count)
     {
         auto id = static_cast<msg_id>(report_analog_base + pin->analog());
         io_->write(id, { value });

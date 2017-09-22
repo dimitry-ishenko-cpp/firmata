@@ -83,7 +83,7 @@ private:
     void change_string(std::string);
 
     // ports that are currently being monitored
-    std::array<std::bitset<8>, 16> ports_;
+    std::array<std::bitset<8>, port_count> ports_;
 
     ////////////////////
     payload wait_until(msg_id);
