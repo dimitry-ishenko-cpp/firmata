@@ -161,6 +161,9 @@ enum analog : pos
     A8,  A9, A10, A11, A12, A13, A14, A15,
 };
 
+constexpr std::size_t port_count = port_value_end - port_value_base;
+constexpr std::size_t analog_count = analog_value_end - analog_value_base;
+
 // pin mode
 enum mode : byte
 {
