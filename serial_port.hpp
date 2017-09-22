@@ -14,8 +14,10 @@
 
 #ifdef ASIO_STANDALONE
     #include <asio.hpp>
+    #include <asio/system_timer.hpp>
 #else
     #include <boost/asio.hpp>
+    #include <boost/asio/system_timer.hpp>
     namespace asio { using namespace boost::asio; }
     namespace asio { using boost::system::error_code; }
 #endif
@@ -62,11 +64,12 @@ public:
     virtual void read_callback(callback) override;
 
     // block until condition
-    virtual void wait_until(const condition&) override;
+    virtual bool wait_until(const condition&, const msec& = eons) override;
 
 private:
     ////////////////////
     asio::serial_port port_;
+    asio::system_timer timer_;
 
     std::vector<byte> overall_;
     char one_[128];

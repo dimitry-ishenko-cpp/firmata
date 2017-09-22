@@ -18,7 +18,7 @@ namespace firmata
 
 ////////////////////////////////////////////////////////////////////////////////
 serial_port::serial_port(asio::io_service& io, const std::string& device) :
-    port_(io, device)
+    port_(io, device), timer_(io)
 { }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -47,8 +47,8 @@ void serial_port::read_callback(callback fn)
 {
     if(fn_ && !fn)
     {
-        asio::error_code ec;
-        port_.cancel(ec);
+        port_.cancel();
+        timer_.cancel();
     }
     if(!fn_ && fn) sched_async();
 
@@ -56,13 +56,29 @@ void serial_port::read_callback(callback fn)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void serial_port::wait_until(const condition& fn)
+bool serial_port::wait_until(const condition& fn, const msec& time)
 {
+    bool expired = false;
+
+    if(time != eons)
+    {
+        timer_.expires_from_now(time);
+        timer_.async_wait([&](const asio::error_code& ec)
+        {
+            if(!ec) { expired = true; port_.cancel(); }
+        });
+    }
+
     while(!fn())
     {
         port_.get_io_service().reset();
         port_.get_io_service().run_one();
+
+        if(expired) return false;
     }
+
+    timer_.cancel();
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

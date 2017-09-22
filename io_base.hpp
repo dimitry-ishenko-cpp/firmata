@@ -10,6 +10,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 #include "firmata/types.hpp"
+
+#include <chrono>
 #include <functional>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -29,9 +31,13 @@ public:
     using callback = std::function<void(msg_id, const payload&)>;
     virtual void read_callback(callback) = 0;
 
-    // block until condition
     using condition = std::function<bool()>;
-    virtual void wait_until(const condition&) = 0;
+
+    using msec = std::chrono::milliseconds;
+    static constexpr msec eons { -1 };
+
+    // block until condition or timeout
+    virtual bool wait_until(const condition&, const msec& = eons) = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
