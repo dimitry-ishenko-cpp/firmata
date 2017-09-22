@@ -34,7 +34,14 @@ public:
     ////////////////////
     explicit control(io_base* io) : control(io, false) { }
     control(io_base* io, dont_reset_t) : control(io, true) { }
+
     ~control() noexcept { io_->read_callback(nullptr); }
+
+    control(const control&) = delete;
+    control(control&&) = delete;
+
+    control& operator=(const control&) = delete;
+    control& operator=(control&&) = delete;
 
     ////////////////////
     auto const& protocol() const noexcept { return protocol_; }
