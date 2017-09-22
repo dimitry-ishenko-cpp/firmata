@@ -10,9 +10,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 #include "firmata/types.hpp"
-
 #include <functional>
-#include <tuple>
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace firmata
@@ -25,13 +23,15 @@ class io_base
 {
 public:
     ////////////////////
-    // blocking read/write
     virtual void write(msg_id, const payload& = { }) = 0;
-    virtual std::tuple<msg_id, payload> read() = 0;
 
-    // async read callback
+    // set read callback
     using callback = std::function<void(msg_id, const payload&)>;
-    virtual void reset_async(callback = nullptr) = 0;
+    virtual void read_callback(callback) = 0;
+
+    // block until condition
+    using condition = std::function<bool()>;
+    virtual void wait_until(const condition&) = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
