@@ -52,6 +52,13 @@ public:
     serial_port(asio::io_service& io, const std::string& device);
     virtual ~serial_port() noexcept { read_callback(nullptr); }
 
+    serial_port(const serial_port&) = delete;
+    serial_port(serial_port&&) = delete;
+
+    serial_port& operator=(const serial_port&) = delete;
+    serial_port& operator=(serial_port&&) = delete;
+
+    ////////////////////
     void set(baud_rate);
     void set(flow_control);
     void set(parity);
