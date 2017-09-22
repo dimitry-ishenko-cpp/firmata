@@ -42,8 +42,11 @@ public:
 
     void reset();
 
+    using msec = std::chrono::milliseconds;
+
     template<typename Rep, typename Period>
     void sample_rate(const std::chrono::duration<Rep, Period>&);
+    void sample_rate(const msec&);
 
     ////////////////////
     void string(const std::string&);
@@ -110,9 +113,6 @@ private:
 
     void report_digital(firmata::pin*, bool);
     void report_analog(firmata::pin*, bool);
-
-    using msec = std::chrono::milliseconds;
-    void sample_rate(const msec&);
 
     void async_read(msg_id, const payload&);
 };
