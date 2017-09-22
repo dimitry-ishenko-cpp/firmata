@@ -29,7 +29,7 @@ control::control(io_base* io) : io_(io)
     report_all();
 
     using namespace std::placeholders;
-    io_->reset_async(std::bind(&control::async_read, this, _1, _2));
+    io_->read_callback(std::bind(&control::async_read, this, _1, _2));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -97,20 +97,25 @@ void control::change_string(std::string string)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-payload control::read_until(msg_id reply_id)
+payload control::wait_until(msg_id reply_id)
 {
-    msg_id id;
-    payload data;
-    do std::tie(id, data) = io_->read(); while(id != reply_id);
+    payload reply_data;
 
-    return data;
+    io_->read_callback([&](msg_id id, const payload& data)
+    {
+        if(id == reply_id) reply_data = data;
+    });
+    io_->wait_until([&](){ return !reply_data.empty(); });
+
+    io_->read_callback(nullptr);
+    return reply_data;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void control::query_version()
 {
     io_->write(version);
-    auto data = read_until(version);
+    auto data = wait_until(version);
 
     if(data.size() == 2)
     {
@@ -123,7 +128,7 @@ void control::query_version()
 void control::query_firmware()
 {
     io_->write(firmware_query);
-    auto data = read_until(firmware_response);
+    auto data = wait_until(firmware_response);
 
     if(data.size() >= 2)
     {
@@ -137,7 +142,7 @@ void control::query_firmware()
 void control::query_capability()
 {
     io_->write(capability_query);
-    auto data = read_until(capability_response);
+    auto data = wait_until(capability_response);
 
     using namespace std::placeholders;
     auto pin_mode      = std::bind(&control::pin_mode, this, _1, _2, _3);
@@ -172,7 +177,7 @@ void control::query_capability()
 void control::query_analog_mapping()
 {
     io_->write(analog_mapping_query);
-    auto data = read_until(analog_mapping_response);
+    auto data = wait_until(analog_mapping_response);
 
     auto pi = pins_.begin();
     for(auto ci = data.begin(); ci != data.end() && pi != pins_.end(); ++ci, ++pi)
@@ -185,7 +190,7 @@ void control::query_state()
     for(auto& pin : pins_)
     {
         io_->write(pin_state_query, { pin.pos() });
-        auto data = read_until(pin_state_response);
+        auto data = wait_until(pin_state_response);
 
         if(data.size() >= 3 && data[0] == pin.pos())
         {

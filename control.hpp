@@ -30,7 +30,7 @@ class control
 public:
     ////////////////////
     explicit control(io_base*);
-    ~control() noexcept { io_->reset_async(); }
+    ~control() noexcept { io_->read_callback(nullptr); }
 
     ////////////////////
     auto const& protocol() const noexcept { return protocol_; }
@@ -86,8 +86,7 @@ private:
     std::array<std::bitset<8>, 16> ports_;
 
     ////////////////////
-    // get specific reply discarding others
-    payload read_until(msg_id);
+    payload wait_until(msg_id);
 
     void query_version();
     void query_firmware();
