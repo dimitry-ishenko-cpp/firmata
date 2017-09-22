@@ -48,7 +48,7 @@ class serial_port : public io_base
 public:
     ////////////////////
     serial_port(asio::io_service& io, const std::string& device);
-    virtual ~serial_port() noexcept { reset_async(); }
+    virtual ~serial_port() noexcept { read_callback(nullptr); }
 
     void set(baud_rate);
     void set(flow_control);
@@ -57,9 +57,12 @@ public:
     void set(char_size);
 
     virtual void write(msg_id, const payload& = { }) override;
-    virtual std::tuple<msg_id, payload> read() override;
 
-    virtual void reset_async(callback = nullptr) override;
+    // set read callback
+    virtual void read_callback(callback) override;
+
+    // block until condition
+    virtual void wait_until(const condition&) override;
 
 private:
     ////////////////////
@@ -68,12 +71,11 @@ private:
     std::vector<byte> overall_;
     char one_[128];
 
-    void sched_async();
-
-    std::tuple<msg_id, payload> parse_one();
-
-    void async_read(const asio::error_code&, std::size_t);
     callback fn_;
+
+    void sched_async();
+    void async_read(const asio::error_code&, std::size_t);
+    std::tuple<msg_id, payload> parse_one();
 };
 
 ////////////////////////////////////////////////////////////////////////////////

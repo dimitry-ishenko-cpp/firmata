@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <system_error>
 #include <utility>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -42,28 +43,7 @@ void serial_port::write(msg_id id, const payload& data)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::tuple<msg_id, payload> serial_port::read()
-{
-    msg_id id;
-    payload data;
-
-    do
-    {
-        // read into one buffer
-        auto n = port_.read_some(asio::buffer(one_));
-
-        // copy data into overall buffer
-        overall_.insert(overall_.end(), std::begin(one_), std::next(one_, n));
-
-        std::tie(id, data) = parse_one();
-    }
-    while(data.empty());
-
-    return std::make_tuple(id, std::move(data));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-void serial_port::reset_async(callback fn)
+void serial_port::read_callback(callback fn)
 {
     if(fn_ && !fn)
     {
@@ -76,12 +56,47 @@ void serial_port::reset_async(callback fn)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+void serial_port::wait_until(const condition& fn)
+{
+    while(!fn())
+    {
+        port_.get_io_service().reset();
+        port_.get_io_service().run_one();
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 void serial_port::sched_async()
 {
+    using namespace std::placeholders;
+
     // read into one buffer
     port_.async_read_some(asio::buffer(one_),
-        std::bind(&serial_port::async_read, this, std::placeholders::_1, std::placeholders::_2)
+        std::bind(&serial_port::async_read, this, _1, _2)
     );
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void serial_port::async_read(const asio::error_code& ec, std::size_t n)
+{
+    if(ec) return;
+
+    // copy data into overall buffer
+    overall_.insert(overall_.end(), std::begin(one_), std::next(one_, n));
+
+    for(;;)
+    {
+        msg_id id;
+        payload data;
+        std::tie(id, data) = parse_one();
+
+        // no or incomplete message
+        if(data.empty()) break;
+
+        if(fn_) fn_(id, data);
+    }
+
+    sched_async();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -139,28 +154,6 @@ std::tuple<msg_id, payload> serial_port::parse_one()
     while(false);
 
     return std::make_tuple(id, std::move(data));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-void serial_port::async_read(const asio::error_code& ec, std::size_t n)
-{
-    if(ec) return;
-
-    // copy data into overall buffer
-    overall_.insert(overall_.end(), std::begin(one_), std::next(one_, n));
-
-    for(;;)
-    {
-        msg_id id;
-        payload data;
-        std::tie(id, data) = parse_one();
-
-        if(data.empty()) break;
-
-        if(fn_) fn_(id, data);
-    }
-
-    sched_async();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
