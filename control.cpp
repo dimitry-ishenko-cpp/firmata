@@ -16,6 +16,9 @@ namespace firmata
 {
 
 ////////////////////////////////////////////////////////////////////////////////
+io_base::msec control::timeout_ = io_base::eons;
+
+////////////////////////////////////////////////////////////////////////////////
 control::control(io_base* io, bool dont_reset) : io_(io)
 {
     if(!dont_reset) io_->write(firmata::reset);
@@ -100,12 +103,13 @@ void control::change_string(std::string string)
 payload control::wait_until(msg_id reply_id)
 {
     payload reply_data;
-
     io_->read_callback([&](msg_id id, const payload& data)
     {
         if(id == reply_id) reply_data = data;
     });
-    io_->wait_until([&](){ return !reply_data.empty(); });
+
+    if(!io_->wait_until([&](){ return !reply_data.empty(); }, timeout_))
+        throw std::runtime_error("firmata::control::wait_until(): timeout");
 
     io_->read_callback(nullptr);
     return reply_data;

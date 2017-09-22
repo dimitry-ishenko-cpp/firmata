@@ -48,6 +48,10 @@ public:
     void sample_rate(const std::chrono::duration<Rep, Period>&);
     void sample_rate(const msec&);
 
+    template<typename Rep, typename Period>
+    static void timeout(const std::chrono::duration<Rep, Period>&);
+    static void timeout(const msec& time) noexcept { timeout_ = time; }
+
     ////////////////////
     void string(const std::string&);
     auto const& string() const noexcept { return string_; }
@@ -114,6 +118,8 @@ private:
     void report_digital(firmata::pin*, bool);
     void report_analog(firmata::pin*, bool);
 
+    static msec timeout_;
+
     void async_read(msg_id, const payload&);
 };
 
@@ -121,6 +127,11 @@ private:
 template<typename Rep, typename Period>
 void control::sample_rate(const std::chrono::duration<Rep, Period>& time)
 { sample_rate(std::chrono::duration_cast<msec>(time)); }
+
+////////////////////////////////////////////////////////////////////////////////
+template<typename Rep, typename Period>
+void control::timeout(const std::chrono::duration<Rep, Period>& time)
+{ timeout(std::chrono::duration_cast<msec>(time)); }
 
 ////////////////////////////////////////////////////////////////////////////////
 }
