@@ -89,9 +89,9 @@ private:
         using pos = firmata::pos;
         using mode = firmata::mode;
 
-        std::function<void(pin*, mode /*now*/, mode /*before*/)> pin_mode;
-        std::function<void(pin*, bool)> digital_value;
-        std::function<void(pin*, int)> analog_value;
+        std::function<void(const pin&, mode /*now*/, mode /*before*/)> pin_mode;
+        std::function<void(const pin&, bool)> digital_value;
+        std::function<void(const pin&, int)> analog_value;
     }
     delegate_;
 

@@ -118,13 +118,13 @@ private:
 
     void report_all();
 
-    void pin_mode(firmata::pin*, mode now, mode before);
+    void pin_mode(const firmata::pin&, mode now, mode before);
 
-    void digital_value(firmata::pin*, bool);
-    void analog_value(firmata::pin*, int);
+    void digital_value(const firmata::pin&, bool);
+    void analog_value(const firmata::pin&, int);
 
-    void report_digital(firmata::pin*, bool);
-    void report_analog(firmata::pin*, bool);
+    void report_digital(const firmata::pin&, bool);
+    void report_analog(const firmata::pin&, bool);
 
     static msec timeout_;
 

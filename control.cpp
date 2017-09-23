@@ -217,16 +217,16 @@ void control::report_all()
         {
         case digital_in:
         case pullup_in:
-            report_digital(&pin, true);
+            report_digital(pin, true);
             break;
 
         case digital_out:
         case pwm:
-            report_digital(&pin, false);
+            report_digital(pin, false);
             break;
 
         case analog_in:
-            report_analog(&pin, true);
+            report_analog(pin, true);
             break;
 
         default: break;
@@ -234,14 +234,14 @@ void control::report_all()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::pin_mode(firmata::pin* pin, mode now, mode before)
+void control::pin_mode(const firmata::pin& pin, mode now, mode before)
 {
     if(before == digital_in || before == pullup_in)
         report_digital(pin, false);
     else if(before == analog_in)
         report_analog(pin, false);
 
-    io_->write(firmata::pin_mode, { pin->pos(), now });
+    io_->write(firmata::pin_mode, { pin.pos(), now });
 
     if(now == digital_in || now == pullup_in)
         report_digital(pin, true);
@@ -249,24 +249,24 @@ void control::pin_mode(firmata::pin* pin, mode now, mode before)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::digital_value(firmata::pin* pin, bool value)
+void control::digital_value(const firmata::pin& pin, bool value)
 {
-    io_->write(firmata::digital_value, { pin->pos(), value });
+    io_->write(firmata::digital_value, { pin.pos(), value });
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::analog_value(firmata::pin* pin, int value)
+void control::analog_value(const firmata::pin& pin, int value)
 {
     payload data = to_data(value);
-    data.insert(data.begin(), pin->pos());
+    data.insert(data.begin(), pin.pos());
 
     io_->write(ext_analog_value, data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::report_digital(firmata::pin* pin, bool value)
+void control::report_digital(const firmata::pin& pin, bool value)
 {
-    std::size_t port = pin->pos() / 8, bit = pin->pos() % 8;
+    std::size_t port = pin.pos() / 8, bit = pin.pos() % 8;
 
     if(port < ports_.size())
     {
@@ -282,11 +282,11 @@ void control::report_digital(firmata::pin* pin, bool value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::report_analog(firmata::pin* pin, bool value)
+void control::report_analog(const firmata::pin& pin, bool value)
 {
-    if(pin->analog() != npos && pin->analog() < analog_count)
+    if(pin.analog() != npos && pin.analog() < analog_count)
     {
-        auto id = static_cast<msg_id>(report_analog_base + pin->analog());
+        auto id = static_cast<msg_id>(report_analog_base + pin.analog());
         io_->write(id, { value });
     }
 }
