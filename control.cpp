@@ -16,6 +16,10 @@ namespace firmata
 {
 
 ////////////////////////////////////////////////////////////////////////////////
+struct timeout_error : public std::runtime_error
+{ using std::runtime_error::runtime_error; };
+
+////////////////////////////////////////////////////////////////////////////////
 io_base::msec control::timeout_ = io_base::eons;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -25,10 +29,10 @@ control::control(io_base* io, bool dont_reset) : io_(io)
 
     query_version();
     query_firmware();
-
     query_capability();
     query_analog_mapping();
     query_state();
+
     report_all();
 
     using namespace std::placeholders;
@@ -69,7 +73,7 @@ firmata::pin& control::pin(firmata::mode mode, firmata::pos pos)
         for(auto& pin : pins_)
         { if(pin.supports(mode) && 0 == pos--) return pin; }
 
-    throw std::out_of_range("firmata::control::pin(): pin not found");
+    throw std::out_of_range("Pin not found");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -82,7 +86,7 @@ const firmata::pin& control::pin(firmata::mode mode, firmata::pos pos) const
         for(auto const& pin : pins_)
         { if(pin.supports(mode) && 0 == pos--) return pin; }
 
-    throw std::out_of_range("firmata::control::pin(): pin not found");
+    throw std::out_of_range("Pin not found");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -108,8 +112,9 @@ payload control::wait_until(msg_id reply_id)
         if(id == reply_id) reply_data = data;
     });
 
-    if(!io_->wait_until([&](){ return !reply_data.empty(); }, timeout_))
-        throw std::runtime_error("firmata::control::wait_until(): timeout");
+    if(!io_->wait_until(
+        [&](){ return !reply_data.empty(); }, timeout_
+    )) throw timeout_error("Read timed out");
 
     io_->read_callback(nullptr);
     return reply_data;
