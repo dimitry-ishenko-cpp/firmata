@@ -9,17 +9,18 @@
 #define FIRMATA_IO_BASE_HPP
 
 ////////////////////////////////////////////////////////////////////////////////
+#include "firmata/callback.hpp"
 #include "firmata/types.hpp"
 
 #include <chrono>
-#include <functional>
+#include <utility> // std::move
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace firmata
 {
 
 ////////////////////////////////////////////////////////////////////////////////
-// Interface for communication with Firmata host
+// Abstract base class for communication with Firmata host
 //
 class io_base
 {
@@ -27,10 +28,13 @@ public:
     ////////////////////
     virtual void write(msg_id, const payload& = { }) = 0;
 
-    // set read callback
-    using callback = std::function<void(msg_id, const payload&)>;
-    virtual void read_callback(callback) = 0;
+    ////////////////////
+    using read_callback = callback<void(msg_id, const payload&)>;
 
+    virtual int on_read(read_callback fn) { return chain_.add(std::move(fn)); }
+    virtual void remove_callback(int id) { chain_.remove(id); }
+
+    ////////////////////
     using condition = std::function<bool()>;
 
     using msec = std::chrono::milliseconds;
@@ -38,6 +42,10 @@ public:
 
     // block until condition or timeout
     virtual bool wait_until(const condition&, const msec& = eons) = 0;
+
+protected:
+    ////////////////////
+    callback_chain<read_callback> chain_;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
