@@ -34,7 +34,7 @@ public:
     explicit control(io_base* io) : control(io, false) { }
     control(io_base* io, dont_reset_t) : control(io, true) { }
 
-    ~control() noexcept { io_->read_callback(nullptr); }
+    ~control() noexcept;
 
     control(const control&) = delete;
     control(control&&) = delete;
@@ -93,6 +93,7 @@ private:
     control(io_base*, bool dont_reset);
 
     io_base* io_;
+    int id_;
 
     firmata::protocol protocol_;
     firmata::firmware firmware_;

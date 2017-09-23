@@ -36,8 +36,11 @@ control::control(io_base* io, bool dont_reset) : io_(io)
     report_all();
 
     using namespace std::placeholders;
-    io_->read_callback(std::bind(&control::async_read, this, _1, _2));
+    id_ = io_->on_read(std::bind(&control::async_read, this, _1, _2));
 }
+
+////////////////////////////////////////////////////////////////////////////////
+control::~control() noexcept { io_->remove_callback(id_); }
 
 ////////////////////////////////////////////////////////////////////////////////
 void control::reset()
@@ -99,7 +102,7 @@ void control::change_string(std::string s)
 payload control::wait_until(msg_id reply_id)
 {
     payload reply_data;
-    io_->read_callback([&](msg_id id, const payload& data)
+    auto id = io_->on_read([&](msg_id id, const payload& data)
     {
         if(id == reply_id) reply_data = data;
     });
@@ -108,7 +111,7 @@ payload control::wait_until(msg_id reply_id)
         [&](){ return !reply_data.empty(); }, timeout_
     )) throw timeout_error("Read timed out");
 
-    io_->read_callback(nullptr);
+    io_->remove_callback(id);
     return reply_data;
 }
 
