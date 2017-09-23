@@ -22,6 +22,13 @@ serial_port::serial_port(asio::io_service& io, const std::string& device) :
 { }
 
 ////////////////////////////////////////////////////////////////////////////////
+serial_port::~serial_port() noexcept
+{
+    port_.cancel();
+    timer_.cancel();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 void serial_port::set(baud_rate    baud) { port_.set_option(asio::serial_port::baud_rate(baud)); }
 void serial_port::set(flow_control flow) { port_.set_option(asio::serial_port::flow_control(flow)); }
 void serial_port::set(parity       pari) { port_.set_option(asio::serial_port::parity(pari)); }
@@ -43,16 +50,21 @@ void serial_port::write(msg_id id, const payload& data)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void serial_port::read_callback(callback fn)
+int serial_port::on_read(read_callback fn)
 {
-    if(fn_ && !fn)
+    sched_async();
+    return io_base::on_read(std::move(fn));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void serial_port::remove_callback(int id)
+{
+    io_base::remove_callback(id);
+    if(chain_.empty())
     {
         port_.cancel();
         timer_.cancel();
     }
-    if(!fn_ && fn) sched_async();
-
-    fn_ = std::move(fn);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -109,7 +121,7 @@ void serial_port::async_read(const asio::error_code& ec, std::size_t n)
         // no or incomplete message
         if(data.empty()) break;
 
-        if(fn_) fn_(id, data);
+        chain_(id, data);
     }
 
     sched_async();
