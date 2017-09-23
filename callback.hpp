@@ -25,18 +25,20 @@ template<typename Fn>
 struct callback_chain
 {
     ////////////////////
-    int add(Fn fn) { map_.emplace(id_, std::move(fn)); return id_++; }
-    void remove(int id) { map_.erase(id); }
+    int add(Fn fn) { cont_.emplace(id_, std::move(fn)); return id_++; }
+    void remove(int id) { cont_.erase(id); }
+
+    auto empty() const noexcept { return cont_.empty(); }
 
     template<typename... Args>
     void operator()(Args&&... args)
     {
-        for(auto const& fn : map_) fn.second(std::forward<Args>(args)...);
+        for(auto const& fn : cont_) fn.second(std::forward<Args>(args)...);
     }
 
 private:
     ////////////////////
-    std::map<int, Fn> map_;
+    std::map<int, Fn> cont_;
     int id_ = 0;
 };
 
