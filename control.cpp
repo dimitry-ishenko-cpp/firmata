@@ -90,17 +90,9 @@ const firmata::pin& control::pin(firmata::mode mode, firmata::pos pos) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::on_string_changed(control::string_callback fn)
-{ string_callback_.push_back(std::move(fn)); }
-
-////////////////////////////////////////////////////////////////////////////////
-void control::change_string(std::string string)
+void control::change_string(std::string s)
 {
-    if(string != string_)
-    {
-        string_ = std::move(string);
-        for(auto& fn : string_callback_) fn(string_);
-    }
+    if(string_ != s) chain_(string_ = std::move(s));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -9,6 +9,7 @@
 #define FIRMATA_CONTROL_HPP
 
 ////////////////////////////////////////////////////////////////////////////////
+#include "firmata/callback.hpp"
 #include "firmata/io_base.hpp"
 #include "firmata/pin.hpp"
 #include "firmata/types.hpp"
@@ -16,9 +17,7 @@
 #include <array>
 #include <bitset>
 #include <chrono>
-#include <functional>
 #include <string>
-#include <vector>
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace firmata
@@ -63,8 +62,9 @@ public:
     void string(const std::string&);
     auto const& string() const noexcept { return string_; }
 
-    using string_callback = std::function<void(const std::string&)>;
-    void on_string_changed(string_callback fn);
+    using string_callback = callback<void(const std::string&)>;
+    int on_string_changed(string_callback fn) { return chain_.add(std::move(fn)); }
+    void remove_callback(int id) { chain_.remove(id); }
 
     ////////////////////
     auto pin_begin() noexcept { return pins_.begin(); }
@@ -99,7 +99,7 @@ private:
     firmata::pins pins_;
     std::string string_;
 
-    std::vector<string_callback> string_callback_;
+    callback_chain<string_callback> chain_;
     void change_string(std::string);
 
     // ports that are currently being monitored
