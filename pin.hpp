@@ -9,13 +9,13 @@
 #define FIRMATA_PIN_HPP
 
 ////////////////////////////////////////////////////////////////////////////////
+#include "firmata/callback.hpp"
 #include "firmata/types.hpp"
 
 #include <functional>
 #include <map>
 #include <set>
 #include <utility> // std::swap
-#include <vector>
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace firmata
@@ -64,8 +64,9 @@ public:
     ////////////////////
     auto state() const noexcept { return state_; }
 
-    using state_callback = std::function<void(int)>;
-    void on_state_changed(state_callback);
+    using state_callback = callback<void(int)>;
+    int on_state_changed(state_callback fn) { return chain_.add(std::move(fn)); }
+    void remove_callback(int id) { chain_.remove(id); }
 
 private:
     ////////////////////
@@ -79,7 +80,7 @@ private:
     int value_ = 0;
 
     int state_ = 0;
-    std::vector<state_callback> state_callback_;
+    callback_chain<state_callback> chain_;
     void change_state(int);
 
     ////////////////////

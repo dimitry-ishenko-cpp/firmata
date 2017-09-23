@@ -51,17 +51,9 @@ void pin::value(int value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void pin::on_state_changed(state_callback fn)
-{ state_callback_.push_back(std::move(fn)); }
-
-////////////////////////////////////////////////////////////////////////////////
-void pin::change_state(int state)
+void pin::change_state(int s)
 {
-    if(state != state_)
-    {
-        state_ = state;
-        for(auto& fn : state_callback_) fn(state_);
-    }
+    if(state_ != s) chain_(state_ = s);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
