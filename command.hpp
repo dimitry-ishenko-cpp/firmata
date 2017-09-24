@@ -15,7 +15,6 @@
 
 #include <array>
 #include <bitset>
-#include <chrono>
 #include <string>
 #include <stdexcept>
 #include <vector>
@@ -53,8 +52,6 @@ public:
 
     void reset();
     void string(const std::string&);
-
-    using msec = std::chrono::milliseconds;
 
     protocol query_version(const msec&);
     firmware query_firmware(const msec&);

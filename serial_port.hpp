@@ -72,7 +72,7 @@ public:
     virtual void remove_callback(int id) override;
 
     // block until condition
-    virtual bool wait_until(const condition&, const msec& = eons) override;
+    virtual bool wait_until(const condition&, const msec&) override;
 
 private:
     ////////////////////

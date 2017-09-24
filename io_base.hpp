@@ -12,7 +12,7 @@
 #include "firmata/callback.hpp"
 #include "firmata/types.hpp"
 
-#include <chrono>
+#include <functional>
 #include <utility> // std::move
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -35,13 +35,9 @@ public:
     virtual void remove_callback(int id) { chain_.remove(id); }
 
     ////////////////////
-    using condition = std::function<bool()>;
-
-    using msec = std::chrono::milliseconds;
-    static constexpr msec eons { -1 };
-
     // block until condition or timeout
-    virtual bool wait_until(const condition&, const msec& = eons) = 0;
+    using condition = std::function<bool()>;
+    virtual bool wait_until(const condition&, const msec&) = 0;
 
 protected:
     ////////////////////

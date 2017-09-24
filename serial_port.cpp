@@ -72,7 +72,7 @@ bool serial_port::wait_until(const condition& fn, const msec& time)
 {
     bool expired = false;
 
-    if(time != eons)
+    if(time != forever)
     {
         timer_.expires_from_now(time);
         timer_.async_wait([&](const asio::error_code& ec)

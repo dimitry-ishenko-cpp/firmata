@@ -48,8 +48,6 @@ public:
 
     void reset();
 
-    using msec = command::msec;
-
     template<typename Rep, typename Period>
     static void timeout(const std::chrono::duration<Rep, Period>&);
     static void timeout(const msec& time) noexcept { time_ = time; }
