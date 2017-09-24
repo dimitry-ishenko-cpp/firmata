@@ -48,15 +48,6 @@ void control::reset()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::size_t control::pin_count(firmata::mode mode) const noexcept
-{
-    std::size_t count = 0;
-    for(auto const& pin : pins_) if(pin.supports(mode)) ++count;
-
-    return count;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 firmata::pin& control::pin(firmata::mode mode, firmata::pos pos)
 {
     if(mode == analog_in)
