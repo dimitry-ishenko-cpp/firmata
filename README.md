@@ -38,9 +38,10 @@ control arduino(&device);
 
 ////////////////////
 // switch all analog input pins to output
-std::for_each(arduino.pin_begin(), arduino.pin_end(),
-    [](auto& pin){ if(pin.mode() == analog_in) pin.mode(digital_out); }
-);
+for(auto& pin : arduino.pins())
+{
+    if(pin.mode() == analog_in) pin.mode(digital_out); }
+}
 
 ////////////////////
 // switch pin D0 to digital input
