@@ -43,6 +43,7 @@ public:
         swap(mode_,     other.mode_    );
         swap(value_,    other.value_   );
         swap(state_,    other.state_   );
+        swap(chain_,    other.chain_   );
         swap(delegate_, other.delegate_);
     }
 
