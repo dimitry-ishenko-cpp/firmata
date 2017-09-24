@@ -10,14 +10,14 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 #include "firmata/callback.hpp"
+#include "firmata/command.hpp"
 #include "firmata/io_base.hpp"
 #include "firmata/pin.hpp"
 #include "firmata/types.hpp"
 
-#include <array>
-#include <bitset>
 #include <chrono>
 #include <string>
+#include <vector>
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace firmata
@@ -33,7 +33,6 @@ public:
     ////////////////////
     explicit control(io_base* io) : control(io, false) { }
     control(io_base* io, dont_reset_t) : control(io, true) { }
-
     ~control() noexcept;
 
     control(const control&) = delete;
@@ -48,18 +47,19 @@ public:
 
     void reset();
 
-    using msec = std::chrono::milliseconds;
-
-    template<typename Rep, typename Period>
-    void sample_rate(const std::chrono::duration<Rep, Period>&);
-    void sample_rate(const msec&);
+    using msec = command::msec;
 
     template<typename Rep, typename Period>
     static void timeout(const std::chrono::duration<Rep, Period>&);
-    static void timeout(const msec& time) noexcept { timeout_ = time; }
+    static void timeout(const msec& time) noexcept { time_ = time; }
+
+    static auto const& timeout() noexcept { return time_; }
 
     ////////////////////
-    void string(const std::string&);
+    // send string to host
+    void string(const std::string& s) { cmd_.string(s); }
+
+    // last string received from host
     auto const& string() const noexcept { return string_; }
 
     using string_callback = callback<void(const std::string&)>;
@@ -94,47 +94,20 @@ private:
 
     io_base* io_;
     int id_;
+    command cmd_;
 
     firmata::protocol protocol_;
     firmata::firmware firmware_;
-    firmata::pins pins_;
+
+    std::vector<firmata::pin> pins_;
+
     std::string string_;
-
     callback_chain<string_callback> chain_;
-    void change_string(std::string);
-
-    // ports that are currently being monitored
-    std::array<std::bitset<8>, port_count> ports_;
-
-    ////////////////////
-    payload wait_until(msg_id);
-
-    void query_version();
-    void query_firmware();
-
-    void query_capability();
-    void query_analog_mapping();
-    void query_state();
-
-    void report_all();
-
-    void pin_mode(const firmata::pin&, mode now, mode before);
-
-    void digital_value(const firmata::pin&, bool);
-    void analog_value(const firmata::pin&, int);
-
-    void report_digital(const firmata::pin&, bool);
-    void report_analog(const firmata::pin&, bool);
-
-    static msec timeout_;
 
     void async_read(msg_id, const payload&);
-};
 
-////////////////////////////////////////////////////////////////////////////////
-template<typename Rep, typename Period>
-void control::sample_rate(const std::chrono::duration<Rep, Period>& time)
-{ sample_rate(std::chrono::duration_cast<msec>(time)); }
+    static msec time_;
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 template<typename Rep, typename Period>
