@@ -5,10 +5,10 @@
 // Distributed under the GNU GPL license. See the LICENSE.md file for details.
 
 ////////////////////////////////////////////////////////////////////////////////
+#include "firmata/command.hpp"
 #include "firmata/pin.hpp"
 
 #include <stdexcept>
-#include <utility> // std::swap
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace firmata
@@ -17,44 +17,43 @@ namespace firmata
 ////////////////////////////////////////////////////////////////////////////////
 void pin::mode(firmata::mode mode)
 {
-    if(supports(mode))
-    {
-        if(delegate_.pin_mode)
-        {
-            std::swap(mode_, mode);
-            delegate_.pin_mode(*this, mode_, mode);
-        }
-    }
-    else throw std::invalid_argument("firmata::pin::mode(): unsupported mode");
+    if(!supports(mode)) throw std::invalid_argument("Unsupported mode");
+    if(!cmd_) throw std::logic_error("Invalid state");
+
+    if(mode_ == digital_in || mode_ == pullup_in)
+        cmd_->report_digital(pos_, false);
+    else if(mode_ == analog_in)
+        cmd_->report_analog(analog_, false);
+
+    mode_ = mode;
+    cmd_->pin_mode(pos_, mode_);
+
+    if(mode_ == digital_in || mode_ == pullup_in)
+        cmd_->report_digital(pos_, true);
+    else if(mode_ == analog_in)
+        cmd_->report_analog(analog_, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void pin::value(int value)
 {
+    if(!cmd_) throw std::logic_error("Invalid state");
+
     if(mode_ == digital_out)
     {
-        if(delegate_.digital_value)
-        {
-            value_ = bool(value);
-            delegate_.digital_value(*this, value_);
-        }
+        value_ = bool(value);
+        cmd_->digital_value(pos_, value_);
     }
     else if(mode_ == pwm)
     {
-        if(delegate_.analog_value)
-        {
-            value_ = value;
-            delegate_.analog_value(*this, value_);
-        }
+        value_ = value;
+        cmd_->analog_value(pos_, value_);
     }
-    else throw std::invalid_argument("firmata::pin::value(): invalid mode");
+    else throw std::invalid_argument("Invalid mode");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void pin::change_state(int s)
-{
-    if(state_ != s) chain_(state_ = s);
-}
+void pin::change_state(int s) { if(state_ != s) chain_(state_ = s); }
 
 ////////////////////////////////////////////////////////////////////////////////
 }

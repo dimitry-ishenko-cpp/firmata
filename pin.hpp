@@ -12,7 +12,6 @@
 #include "firmata/callback.hpp"
 #include "firmata/types.hpp"
 
-#include <functional>
 #include <map>
 #include <set>
 #include <utility> // std::swap
@@ -20,6 +19,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 namespace firmata
 {
+
+////////////////////////////////////////////////////////////////////////////////
+class command;
 
 ////////////////////////////////////////////////////////////////////////////////
 class pin
@@ -36,15 +38,15 @@ public:
     void swap(pin& other) noexcept
     {
         using std::swap;
-        swap(pos_,      other.pos_     );
-        swap(analog_,   other.analog_  );
-        swap(modes_,    other.modes_   );
-        swap(reses_,    other.reses_   );
-        swap(mode_,     other.mode_    );
-        swap(value_,    other.value_   );
-        swap(state_,    other.state_   );
-        swap(chain_,    other.chain_   );
-        swap(delegate_, other.delegate_);
+        swap(pos_,    other.pos_   );
+        swap(analog_, other.analog_);
+        swap(modes_,  other.modes_ );
+        swap(reses_,  other.reses_ );
+        swap(cmd_,    other.cmd_   );
+        swap(mode_,   other.mode_  );
+        swap(value_,  other.value_ );
+        swap(state_,  other.state_ );
+        swap(chain_,  other.chain_ );
     }
 
     ////////////////////
@@ -77,6 +79,8 @@ private:
     // resolution for each mode
     std::map<firmata::mode, firmata::res> reses_;
 
+    command* cmd_ = nullptr;
+
     firmata::mode mode_;
     int value_ = 0;
 
@@ -85,25 +89,14 @@ private:
     void change_state(int);
 
     ////////////////////
-    struct
-    {
-        using pos = firmata::pos;
-        using mode = firmata::mode;
+    pin(firmata::pos pos, command* cmd) : pos_(pos), cmd_(cmd) { }
 
-        std::function<void(const pin&, mode /*now*/, mode /*before*/)> pin_mode;
-        std::function<void(const pin&, bool)> digital_value;
-        std::function<void(const pin&, int)> analog_value;
-    }
-    delegate_;
-
+    friend class command;
     friend class control;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 inline void swap(pin& lhs, pin& rhs) noexcept { lhs.swap(rhs); }
-
-////////////////////////////////////////////////////////////////////////////////
-using pins = std::vector<pin>;
 
 ////////////////////////////////////////////////////////////////////////////////
 }
