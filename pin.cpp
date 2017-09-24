@@ -15,7 +15,7 @@ namespace firmata
 {
 
 ////////////////////////////////////////////////////////////////////////////////
-void pin::mode(firmata::mode mode)
+void pin::mode(firmata::mode mode) const
 {
     if(!supports(mode)) throw std::invalid_argument("Unsupported mode");
     if(!cmd_) throw std::logic_error("Invalid state");
@@ -35,7 +35,7 @@ void pin::mode(firmata::mode mode)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void pin::value(int value)
+void pin::value(int value) const
 {
     if(!cmd_) throw std::logic_error("Invalid state");
 
