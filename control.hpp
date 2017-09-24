@@ -120,7 +120,8 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 template<typename Rep, typename Period>
-void control::timeout(const std::chrono::duration<Rep, Period>& time)
+inline void
+control::timeout(const std::chrono::duration<Rep, Period>& time)
 { timeout(std::chrono::duration_cast<msec>(time)); }
 
 ////////////////////////////////////////////////////////////////////////////////
