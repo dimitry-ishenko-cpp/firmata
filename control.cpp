@@ -124,9 +124,9 @@ void control::info()
 
     for(auto& pin : pins_)
     {
-        cout << "Pin " << int(pin.pos()) << ":" << endl;
+        cout << "Pin " << +pin.pos() << ":" << endl;
         if(pin.analog() != npos)
-            cout << "  analog: " << int(pin.analog()) << endl;
+            cout << "  analog: " << +pin.analog() << endl;
 
         cout << "  mode: " << to_string(pin.mode()) << endl;
         cout << "  res: " << pin.res() << endl;
