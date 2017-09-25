@@ -33,6 +33,9 @@ asio::io_service io;
 firmata::serial_port device(io, "/dev/ttyACM0");
 device.set(57600_baud);
 
+// create debounce
+firmata::debounce debounce(io);
+
 // connect to Firmata host
 firmata::control arduino(&device);
 
@@ -48,6 +51,12 @@ arduino.pin(D0).mode(pullup_in);
 arduino.pin(D0).on_state_changed([&](int state)
 {
     std::cout << "D0=" << (state ? "on" : "off") << std::endl;
+});
+
+// same as above, but debounce D0
+debounce.on_state_changed(pin0, [&](int state)
+{
+    std::cout << "Debounced D0=" << (state ? "on" : "off") << std::endl;
 });
 
 ////////////////////
