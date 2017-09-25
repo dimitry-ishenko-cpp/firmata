@@ -24,17 +24,77 @@ using  byte = std::uint8_t;
 using  word = std::uint16_t;
 using dword = std::uint32_t;
 
+// number of bits
+enum bits : byte { };
+
+// pin position or number
+using pos = byte;
+
+// mode resolution in bits
+using res = bits;
+
+// time
+using msec = std::chrono::milliseconds;
+
+////////////////////////////////////////////////////////////////////////////////
+namespace literals
+{
+
+constexpr bits operator"" _bits(unsigned long long n) noexcept
+{ return static_cast<bits>(n); }
+
 constexpr bool on = true;
 constexpr bool off = false;
 
-// number of bits (eg, res, char_size, etc.)
-enum bits : byte { };
+// invalid pin
+constexpr pos npos = -1;
 
-namespace literals
+enum digital : pos
 {
-    constexpr bits operator"" _bits(unsigned long long n) noexcept
-    { return static_cast<bits>(n); }
+    D0,   D1,   D2,   D3,   D4,   D5,   D6,   D7,   D8,   D9,
+    D10,  D11,  D12,  D13,  D14,  D15,  D16,  D17,  D18,  D19,
+    D20,  D21,  D22,  D23,  D24,  D25,  D26,  D27,  D28,  D29,
+    D30,  D31,  D32,  D33,  D34,  D35,  D36,  D37,  D38,  D39,
+    D40,  D41,  D42,  D43,  D44,  D45,  D46,  D47,  D48,  D49,
+    D50,  D51,  D52,  D53,  D54,  D55,  D56,  D57,  D58,  D59,
+    D60,  D61,  D62,  D63,  D64,  D65,  D66,  D67,  D68,  D69,
+    D70,  D71,  D72,  D73,  D74,  D75,  D76,  D77,  D78,  D79,
+    D80,  D81,  D82,  D83,  D84,  D85,  D86,  D87,  D88,  D89,
+    D90,  D91,  D92,  D93,  D94,  D95,  D96,  D97,  D98,  D99,
+    D100, D101, D102, D103, D104, D105, D106, D107, D108, D109,
+    D110, D111, D112, D113, D114, D115, D116, D117, D118, D119,
+    D120, D121, D122, D123, D124, D125, D126, D127,
+};
+
+enum analog : pos
+{
+    A0,  A1, A2,  A3,  A4,  A5,  A6,  A7,
+    A8,  A9, A10, A11, A12, A13, A14, A15,
+};
+
+// pin mode
+enum mode : byte
+{
+    digital_in  =  0,
+    digital_out =  1,
+    analog_in   =  2,
+    pwm         =  3,
+    servo       =  4,
+    shift       =  5,
+    i2c         =  6,
+    onewire     =  7,
+    stepper     =  8,
+    encoder     =  9,
+    serial      = 10,
+    pullup_in   = 11,
+};
+
+static constexpr msec forever { -1 };
+
 }
+
+////////////////////////////////////////////////////////////////////////////////
+using namespace literals;
 
 ////////////////////////////////////////////////////////////////////////////////
 enum msg_id : dword;
@@ -54,8 +114,7 @@ constexpr msg_id ext_sysex(word ext_id) noexcept
 constexpr bool is_ext_sysex(msg_id id) noexcept
 { return is_sysex(id) && 0 == ((id >> 8) & 0xff); }
 
-// message id includes standard id,
-// as well as optional sysex id and extended id
+// message id includes standard id, optional sysex id and extended id
 enum msg_id : dword
 {
     port_value_base         = 0x90,
@@ -100,6 +159,9 @@ enum msg_id : dword
 constexpr auto size(msg_id id) noexcept
 { return is_ext_sysex(id) ? sizeof(dword) : is_sysex(id) ? sizeof(word) : sizeof(byte); }
 
+constexpr auto port_count = port_value_end - port_value_base;
+constexpr auto analog_count = analog_value_end - analog_value_base;
+
 ////////////////////////////////////////////////////////////////////////////////
 // message data
 using payload = std::vector<byte>;
@@ -131,62 +193,6 @@ struct firmware
     int major, minor;
     std::string name;
 };
-
-////////////////////////////////////////////////////////////////////////////////
-// pin number
-using pos = byte;
-constexpr pos npos = -1;
-
-enum digital : pos
-{
-    D0,   D1,   D2,   D3,   D4,   D5,   D6,   D7,   D8,   D9,
-    D10,  D11,  D12,  D13,  D14,  D15,  D16,  D17,  D18,  D19,
-    D20,  D21,  D22,  D23,  D24,  D25,  D26,  D27,  D28,  D29,
-    D30,  D31,  D32,  D33,  D34,  D35,  D36,  D37,  D38,  D39,
-    D40,  D41,  D42,  D43,  D44,  D45,  D46,  D47,  D48,  D49,
-    D50,  D51,  D52,  D53,  D54,  D55,  D56,  D57,  D58,  D59,
-    D60,  D61,  D62,  D63,  D64,  D65,  D66,  D67,  D68,  D69,
-    D70,  D71,  D72,  D73,  D74,  D75,  D76,  D77,  D78,  D79,
-    D80,  D81,  D82,  D83,  D84,  D85,  D86,  D87,  D88,  D89,
-    D90,  D91,  D92,  D93,  D94,  D95,  D96,  D97,  D98,  D99,
-    D100, D101, D102, D103, D104, D105, D106, D107, D108, D109,
-    D110, D111, D112, D113, D114, D115, D116, D117, D118, D119,
-    D120, D121, D122, D123, D124, D125, D126, D127,
-};
-
-enum analog : pos
-{
-    A0,  A1, A2,  A3,  A4,  A5,  A6,  A7,
-    A8,  A9, A10, A11, A12, A13, A14, A15,
-};
-
-constexpr std::size_t port_count = port_value_end - port_value_base;
-constexpr std::size_t analog_count = analog_value_end - analog_value_base;
-
-// pin mode
-enum mode : byte
-{
-    digital_in  =  0,
-    digital_out =  1,
-    analog_in   =  2,
-    pwm         =  3,
-    servo       =  4,
-    shift       =  5,
-    i2c         =  6,
-    onewire     =  7,
-    stepper     =  8,
-    encoder     =  9,
-    serial      = 10,
-    pullup_in   = 11,
-};
-
-// mode resolution
-using res = bits;
-
-////////////////////////////////////////////////////////////////////////////////
-using msec = std::chrono::milliseconds;
-
-static constexpr msec forever { -1 };
 
 ////////////////////////////////////////////////////////////////////////////////
 }
