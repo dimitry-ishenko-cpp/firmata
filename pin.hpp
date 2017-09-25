@@ -57,12 +57,12 @@ public:
     bool supports(firmata::mode mode) const noexcept { return modes_.count(mode); }
 
     auto mode() const noexcept { return mode_; }
-    void mode(firmata::mode) const;
+    void mode(firmata::mode);
 
     auto res() const noexcept { return reses_.at(mode_); }
 
     auto value() const noexcept { return value_; }
-    void value(int) const;
+    void value(int);
 
     ////////////////////
     auto state() const noexcept { return state_; }
@@ -81,8 +81,8 @@ private:
 
     command* cmd_ = nullptr;
 
-    mutable firmata::mode mode_;
-    mutable int value_ = 0;
+    firmata::mode mode_;
+    int value_ = 0;
 
     int state_ = 0;
     callback_chain<state_callback> chain_;
