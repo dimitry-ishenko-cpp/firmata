@@ -22,18 +22,22 @@ namespace firmata
 {
 
 ////////////////////////////////////////////////////////////////////////////////
-enum baud_rate : unsigned { };
-
 namespace literals
 {
-    constexpr baud_rate operator"" _baud(unsigned long long n) noexcept
-    { return static_cast<baud_rate>(n); }
-}
+
+enum baud_rate : unsigned { };
+
+constexpr baud_rate operator"" _baud(unsigned long long n) noexcept
+{ return static_cast<baud_rate>(n); }
 
 using flow_control = asio::serial_port::flow_control::type;
 using parity = asio::serial_port::parity::type;
 using stop_bits = asio::serial_port::stop_bits::type;
 using char_size = bits;
+
+}
+
+using namespace literals;
 
 ////////////////////////////////////////////////////////////////////////////////
 class serial_port : public io_base
