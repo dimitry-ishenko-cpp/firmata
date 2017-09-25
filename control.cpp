@@ -59,7 +59,7 @@ void control::async_read(msg_id id, const payload& data)
             auto& pin = pins_.get(pos);
             if(pin.mode() == digital_in || pin.mode() == pullup_in)
             {
-                pin.change_state(bool(value & (1 << n)));
+                cmd_.pin_state(pin, bool(value & (1 << n)));
             }
         }
     }
@@ -71,7 +71,7 @@ void control::async_read(msg_id id, const payload& data)
             if(pin.analog() == pos)
             {
                 if(pin.mode() == analog_in)
-                    pin.change_state(to_value(data));
+                    cmd_.pin_state(pin, to_value(data));
                 break;
             }
     }

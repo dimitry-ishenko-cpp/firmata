@@ -92,7 +92,6 @@ private:
     pin(firmata::pos pos, command* cmd) : pos_(pos), cmd_(cmd) { }
 
     friend class command;
-    friend class control;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

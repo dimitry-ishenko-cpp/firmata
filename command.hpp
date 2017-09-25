@@ -48,6 +48,7 @@ public:
     void analog_value(pos, int);
 
     void pin_mode(pos, mode);
+    void pin_state(pin&, int);
 
     void reset();
     void string(const std::string&);
