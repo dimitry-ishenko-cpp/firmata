@@ -24,59 +24,68 @@ Example:
 
 ```cpp
 ////////////////////
+using namespace firmata::literals;
+using namespace std::chrono_literals;
+
 asio::io_service io;
 
-using namespace firmata;
-using namespace firmata::literals;
-
 // open serial port
-serial_port device(io, "/dev/ttyACM0");
+firmata::serial_port device(io, "/dev/ttyACM0");
 device.set(57600_baud);
 
 // connect to Firmata host
-control arduino(&device);
+firmata::control arduino(&device);
 
-////////////////////
 // switch all analog input pins to output
 for(auto& pin : arduino.pins())
-{
-    if(pin.mode() == analog_in) pin.mode(digital_out); }
-}
+    if(pin.mode() == analog_in) pin.mode(digital_out);
 
 ////////////////////
 // switch pin D0 to digital input
 arduino.pin(D0).mode(pullup_in);
 
-// monitor it for state changes
+// monitor pin D0 for state changes
 arduino.pin(D0).on_state_changed([&](int state)
 {
-    std::cout << "pin D0 = " << (state ? "high" : "low") << std::endl;
+    std::cout << "D0=" << (state ? "on" : "off") << std::endl;
 });
 
-// switch pin A3 to analog input
-arduino.pin(A3).mode(analog_in);
+////////////////////
+// find first pin that supports pwm and switch it to pwm mode
+auto& pwm0 = arduino.pin(pwm, 0);
+pwm0.mode(pwm);
 
-// monitor it for state changes
-arduino.pin(A3).on_state_changed([&](int state)
+std::cout << "D" << +pwm0.pos() << " supports PWM" << std::endl;
+
+// switch pin A3 to analog input
+auto& analog3 = arduino.pin(A3);
+analog3.mode(analog_in);
+
+auto pwm0_max = 1 << pwm0.res();
+auto analog3_max = 1 << analog3.res();
+
+// monitor pin A3 and control the pwm pin
+analog3.on_state_changed([&](int state)
 {
     static int before = 0;
     if(std::abs(before - state) >= 10)
     {
-        std::cout << "pin A3 = " << state << std::endl;
+        auto value = state * pwm0_max / analog3_max;
+        pwm0.value(value);
+
         before = state;
     }
 });
 
 ////////////////////
-using namespace std::chrono_literals;
-using handler = std::function<void(const asio::error_code&)>;
-
 // create timer
 asio::system_timer blink_timer(io);
-handler blink_fn;
+
+using handler = std::function<void(const asio::error_code&)>;
+handler blink_led;
 
 // blink led on pin D13 every 500ms
-blink_timer.async_wait(blink_fn = [&](const asio::error_code&)
+blink_timer.async_wait(blink_led = [&](const asio::error_code&)
 {
     // invert pin value
     auto& pin = arduino.pin(D13);
@@ -84,41 +93,11 @@ blink_timer.async_wait(blink_fn = [&](const asio::error_code&)
 
     // restart timer
     blink_timer.expires_at(blink_timer.expires_at() + 500ms);
-    blink_timer.async_wait(blink_fn);
+    blink_timer.async_wait(blink_led);
 });
 
 // start timer
 blink_timer.expires_from_now(0ms);
-
-////////////////////
-// find first pin that supports pwm
-// and switch it to pwm mode
-arduino.pin(pwm, 0).mode(pwm);
-std::cout << "D" << int(arduino.pin(pwm, 0).pos()) << " is a PWM pin" << std::endl;
-
-// create timer
-asio::system_timer pwm_timer(io);
-handler pwm_fn;
-
-// dim lights up and down
-pwm_timer.async_wait(pwm_fn = [&](const asio::error_code&)
-{
-    static int cycle = 0, step = 1;
-
-    // set pwm value
-    arduino.pin(pwm, 0).value(cycle);
-
-    // inc/dec cycle
-    cycle += step;
-    if(cycle == 0 || cycle == 255) step = -step;
-
-    // restart timer
-    pwm_timer.expires_at(pwm_timer.expires_at() + 10ms);
-    pwm_timer.async_wait(pwm_fn);
-});
-
-// start timer
-pwm_timer.expires_from_now(0ms);
 
 ////////////////////
 io.run();
