@@ -101,12 +101,12 @@ firmware command::query_firmware(const msec& time)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::vector<pin> command::query_capability(const msec& time)
+firmata::pins command::query_capability(const msec& time)
 {
     io_->write(capability_query);
     auto data = wait_until(capability_response, time);
 
-    std::vector<firmata::pin> pins;
+    firmata::pins pins;
     firmata::pos pos = 0;
     firmata::pin pin(pos, this);
 
@@ -131,7 +131,7 @@ std::vector<pin> command::query_capability(const msec& time)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void command::query_analog_mapping(std::vector<pin>& pins, const msec& time)
+void command::query_analog_mapping(firmata::pins& pins, const msec& time)
 {
     io_->write(analog_mapping_query);
     auto data = wait_until(analog_mapping_response, time);
@@ -142,7 +142,7 @@ void command::query_analog_mapping(std::vector<pin>& pins, const msec& time)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void command::query_state(std::vector<firmata::pin>& pins, const msec& time)
+void command::query_state(firmata::pins& pins, const msec& time)
 {
     for(auto& pin : pins)
     {
@@ -161,7 +161,7 @@ void command::query_state(std::vector<firmata::pin>& pins, const msec& time)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void command::set_report(std::vector<firmata::pin>& pins)
+void command::set_report(firmata::pins& pins)
 {
     // enable reporting for all inputs and disable for all outputs
     for(auto& pin : pins)

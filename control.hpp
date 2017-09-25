@@ -12,13 +12,12 @@
 #include "firmata/callback.hpp"
 #include "firmata/command.hpp"
 #include "firmata/io_base.hpp"
-#include "firmata/pin.hpp"
+#include "firmata/pins.hpp"
 #include "firmata/types.hpp"
 
 #include <algorithm>
 #include <chrono>
 #include <string>
-#include <vector>
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace firmata
@@ -66,16 +65,17 @@ public:
     void remove_callback(int id) { chain_.remove(id); }
 
     ////////////////////
-    auto& pins() const noexcept { return proxy_; }
+    auto& pins() noexcept { return pins_; }
+    auto const& pins() const noexcept { return pins_; }
 
-    auto& pin(pos n) { return pins_.at(n); }
-    auto const& pin(pos n) const { return pins_.at(n); }
+    auto& pin(pos n) { return pins_.get(n); }
+    auto const& pin(pos n) const { return pins_.get(n); }
 
-    auto& pin(analog n) { return pin(analog_in, n); }
-    auto const& pin(analog n) const { return pin(analog_in, n); }
+    auto& pin(analog n) { return pins_.get(analog_in, n); }
+    auto const& pin(analog n) const { return pins_.get(analog_in, n); }
 
-    firmata::pin& pin(mode, pos);
-    const firmata::pin& pin(mode, pos) const;
+    auto& pin(mode m, pos n) { return pins_.get(m, n); }
+    auto const& pin(mode m, pos n) const { return pins_.get(m, n); }
 
     ////////////////////
     void info(); // for debugging
@@ -90,25 +90,7 @@ private:
 
     firmata::protocol protocol_;
     firmata::firmware firmware_;
-
-    std::vector<firmata::pin> pins_;
-
-    struct proxy
-    {
-        auto begin() const noexcept { return parent->pins_.begin(); }
-        auto end() const noexcept { return parent->pins_.begin(); }
-
-        auto count() const noexcept { return parent->pins_.size(); }
-        auto count(mode n) const noexcept
-        {
-            return std::count_if(begin(), end(),
-                [&](auto& pin){ return pin.supports(n); }
-            );
-        }
-
-        control* parent;
-    }
-    proxy_ { this };
+    firmata::pins pins_;
 
     std::string string_;
     callback_chain<string_callback> chain_;

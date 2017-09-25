@@ -10,14 +10,13 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 #include "firmata/io_base.hpp"
-#include "firmata/pin.hpp"
+#include "firmata/pins.hpp"
 #include "firmata/types.hpp"
 
 #include <array>
 #include <bitset>
 #include <string>
 #include <stdexcept>
-#include <vector>
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace firmata
@@ -55,11 +54,11 @@ public:
 
     protocol query_version(const msec&);
     firmware query_firmware(const msec&);
-    std::vector<pin> query_capability(const msec&);
-    void query_analog_mapping(std::vector<pin>&, const msec&);
-    void query_state(std::vector<pin>&, const msec&);
+    pins query_capability(const msec&);
+    void query_analog_mapping(pins&, const msec&);
+    void query_state(pins&, const msec&);
 
-    void set_report(std::vector<pin>&);
+    void set_report(pins&);
 
 private:
     ////////////////////

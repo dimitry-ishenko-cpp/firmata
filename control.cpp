@@ -6,9 +6,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 #include "firmata/control.hpp"
-
 #include <iostream>
-#include <stdexcept>
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace firmata
@@ -49,32 +47,6 @@ void control::reset()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-firmata::pin& control::pin(firmata::mode mode, firmata::pos pos)
-{
-    if(mode == analog_in)
-        for(auto& pin : pins_)
-        { if(pin.analog() == pos) return pin; }
-    else
-        for(auto& pin : pins_)
-        { if(pin.supports(mode) && 0 == pos--) return pin; }
-
-    throw std::out_of_range("Pin not found");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-const firmata::pin& control::pin(firmata::mode mode, firmata::pos pos) const
-{
-    if(mode == analog_in)
-        for(auto const& pin : pins_)
-        { if(pin.analog() == pos) return pin; }
-    else
-        for(auto const& pin : pins_)
-        { if(pin.supports(mode) && 0 == pos--) return pin; }
-
-    throw std::out_of_range("Pin not found");
-}
-
-////////////////////////////////////////////////////////////////////////////////
 void control::async_read(msg_id id, const payload& data)
 {
     if(id >= port_value_base && id < port_value_end)
@@ -82,9 +54,9 @@ void control::async_read(msg_id id, const payload& data)
         auto pos = 8 * static_cast<int>(id - port_value_base);
         auto value = to_value(data);
 
-        for(auto n = 0; n < 8 && pos < pins_.size(); ++n, ++pos)
+        for(auto n = 0; n < 8 && pos < pins_.count(); ++n, ++pos)
         {
-            auto& pin = pins_.at(pos);
+            auto& pin = pins_.get(pos);
             if(pin.mode() == digital_in || pin.mode() == pullup_in)
             {
                 pin.change_state(bool(value & (1 << n)));
