@@ -8,6 +8,7 @@
 #include "encoder.hpp"
 
 #include <functional>
+#include <stdexcept>
 #include <utility>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -17,8 +18,13 @@ namespace firmata
 ////////////////////////////////////////////////////////////////////////////////
 encoder::encoder(pin& pin1, pin& pin2) : pin1_(pin1), pin2_(pin2)
 {
-    using namespace std::placeholders;
-    id_ = pin1_.on_state_low(std::bind(&encoder::pin_state_low, this));
+    if((pin1.mode() == digital_in || pin1.mode() == pullup_in)
+    && (pin2.mode() == digital_in || pin2.mode() == pullup_in))
+    {
+        using namespace std::placeholders;
+        id_ = pin1_.on_state_low(std::bind(&encoder::pin_state_low, this));
+    }
+    else throw std::invalid_argument("Invalid pin mode");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
