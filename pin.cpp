@@ -53,7 +53,24 @@ void pin::value(int value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void pin::change_state(int s) { if(state_ != s) chain_(state_ = s); }
+cbid pin::on_state_changed(int_callback fn) { return changed_.add(std::move(fn)); }
+cbid pin::on_state_low(void_callback fn) { return low_.add(std::move(fn)); }
+cbid pin::on_state_high(void_callback fn) { return high_.add(std::move(fn)); }
+
+void pin::remove_callback(cbid id)
+{
+    changed_.remove(id) || low_.remove(id) || high_.remove(id);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void pin::change_state(int state)
+{
+    if(state_ != state)
+    {
+        changed_(state_ = state);
+        if(state_) high_(); else low_();
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 }

@@ -38,15 +38,17 @@ public:
     void swap(pin& other) noexcept
     {
         using std::swap;
-        swap(pos_,    other.pos_   );
-        swap(analog_, other.analog_);
-        swap(modes_,  other.modes_ );
-        swap(reses_,  other.reses_ );
-        swap(cmd_,    other.cmd_   );
-        swap(mode_,   other.mode_  );
-        swap(value_,  other.value_ );
-        swap(state_,  other.state_ );
-        swap(chain_,  other.chain_ );
+        swap(pos_,     other.pos_    );
+        swap(analog_,  other.analog_ );
+        swap(modes_,   other.modes_  );
+        swap(reses_,   other.reses_  );
+        swap(cmd_,     other.cmd_    );
+        swap(mode_,    other.mode_   );
+        swap(value_,   other.value_  );
+        swap(state_,   other.state_  );
+        swap(changed_, other.changed_);
+        swap(low_,     other.low_    );
+        swap(high_,    other.high_   );
     }
 
     ////////////////////
@@ -64,12 +66,17 @@ public:
     auto value() const noexcept { return value_; }
     void value(int);
 
-    ////////////////////
     auto state() const noexcept { return state_; }
 
-    using state_callback = callback<void(int)>;
-    cbid on_state_changed(state_callback fn) { return chain_.add(std::move(fn)); }
-    void remove_callback(cbid id) { chain_.remove(id); }
+    ////////////////////
+    using int_callback = callback<void(int)>;
+    using void_callback = callback<void()>;
+
+    cbid on_state_changed(int_callback);
+    cbid on_state_low(void_callback);
+    cbid on_state_high(void_callback);
+
+    void remove_callback(cbid);
 
 private:
     ////////////////////
@@ -85,7 +92,9 @@ private:
     int value_ = 0;
 
     int state_ = 0;
-    call_chain<state_callback> chain_;
+    call_chain<int_callback> changed_ { 0 };
+    call_chain<void_callback> low_    { 1 };
+    call_chain<void_callback> high_   { 2 };
     void change_state(int);
 
     ////////////////////

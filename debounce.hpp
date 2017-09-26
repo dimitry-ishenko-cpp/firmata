@@ -42,7 +42,7 @@ public:
     debounce& operator=(debounce&&) = delete;
 
     ////////////////////
-    using state_callback = pin::state_callback;
+    using state_callback = pin::int_callback;
     int on_state_changed(pin&, state_callback);
     void remove_callback(int);
 
