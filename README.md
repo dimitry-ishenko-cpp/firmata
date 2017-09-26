@@ -29,76 +29,105 @@ using namespace std::chrono_literals;
 
 asio::io_service io;
 
-// open serial port
 firmata::serial_port device(io, "/dev/ttyACM0");
 device.set(57600_baud);
 
-// create debounce
-firmata::debounce debounce(io);
-
-// connect to Firmata host
 firmata::control arduino(&device);
 
-// switch all analog input pins to output
 for(auto& pin : arduino.pins())
+{
     if(pin.mode() == analog_in) pin.mode(digital_out);
+}
 
 ////////////////////
-// switch pin D0 to digital input
-arduino.pin(D0).mode(pullup_in);
+// connect KY-040 rotary encoder:
+// CLK ->  D0
+// DT  ->  D1
+// SW  ->  D2
+// +   -> +5V
+// GND -> GND
+//
+arduino.pin(D0).mode(digital_in);
+arduino.pin(D1).mode(digital_in);
 
-// monitor pin D0 for state changes
-arduino.pin(D0).on_state_changed([&](int state)
+firmata::encoder encoder(arduino.pin(D0), arduino.pin(D1));
+
+encoder.on_count_changed([](int count)
 {
-    std::cout << "D0=" << (state ? "on" : "off") << std::endl;
+    std::cout << "encoder: count=" << count << std::endl;
 });
 
-// same as above, but debounce D0
-debounce.on_state_changed(pin0, [&](int state)
+encoder.on_rotate_cw ([](){ std::cout << "encoder: cw" << std::endl; });
+encoder.on_rotate_ccw([](){ std::cout << "encoder: ccw" << std::endl; });
+
+arduino.pin(D2).mode(pullup_in);
+
+arduino.pin(D2).on_state_changed([](int state)
 {
-    std::cout << "Debounced D0=" << (state ? "on" : "off") << std::endl;
+    std::cout << "encoder: switch=" << state << std::endl;
 });
+
+arduino.pin(D2).on_state_low ([](){ std::cout << "encoder: press" << std::endl; });
+arduino.pin(D2).on_state_high([](){ std::cout << "encoder: release" << std::endl; });
 
 ////////////////////
-// find first pin that supports pwm and switch it to pwm mode
-auto& pwm0 = arduino.pin(pwm, 0);
+// connect ON/OFF switch:
+// 1 ->  D7
+// 2 -> GND
+//
+auto& pin7 = arduino.pin(D7);
+pin7.mode(pullup_in);
+
+firmata::debounce debounce(io);
+
+debounce.on_state_changed(pin7, [](int state)
+{
+    std::cout << "D7: state=" << state << std::endl;
+});
+debounce.on_state_low (pin7, [](){ std::cout << "D7: closed" << std::endl; });
+debounce.on_state_high(pin7, [](){ std::cout << "D7: open" << std::endl; });
+
+////////////////////
+// connect 10K pot:
+// 1 -> +5V
+// 2 ->  A3
+// 3 -> GND
+//
+auto& analog3 = arduino.pin(A3);
+analog3.mode(analog_in);
+
+// connect LED:
+// + -> ... (first pin that supports PWM)
+// - -> GND
+//
+auto& pwm0 = arduino.pin(pwm, 0); // find first pin with PWM support
 pwm0.mode(pwm);
 
 std::cout << "D" << +pwm0.pos() << " supports PWM" << std::endl;
 
-// switch pin A3 to analog input
-auto& analog3 = arduino.pin(A3);
-analog3.mode(analog_in);
-
-auto pwm0_max = 1 << pwm0.res();
-auto analog3_max = 1 << analog3.res();
-
-// monitor pin A3 and control the pwm pin
+// control LED brightness using 10K pot
+//
 analog3.on_state_changed([&](int state)
 {
-    static int before = 0;
-    if(std::abs(before - state) >= 10)
-    {
-        auto value = state * pwm0_max / analog3_max;
-        pwm0.value(value);
+    static auto pwm0_max = 1 << pwm0.res();
+    static auto analog3_max = 1 << analog3.res();
 
-        before = state;
-    }
+    auto value = state * pwm0_max / analog3_max;
+    pwm0.value(value);
 });
 
 ////////////////////
-// create timer
+// blink led on pin D13 every 500ms
+//
 asio::system_timer blink_timer(io);
 
 using handler = std::function<void(const asio::error_code&)>;
 handler blink_led;
 
-// blink led on pin D13 every 500ms
 blink_timer.async_wait(blink_led = [&](const asio::error_code&)
 {
-    // invert pin value
-    auto& pin = arduino.pin(D13);
-    pin.value(!pin.value());
+    auto value = arduino.pin(D13).value();
+    arduino.pin(D13).value( !value );
 
     // restart timer
     blink_timer.expires_at(blink_timer.expires_at() + 500ms);
