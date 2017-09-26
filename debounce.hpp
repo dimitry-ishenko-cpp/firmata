@@ -27,12 +27,12 @@ class debounce
 public:
     ////////////////////
     template<typename Rep, typename Period>
-    debounce(asio::io_service& io, const std::chrono::duration<Rep, Period>& delay) :
-        debounce(io, std::chrono::duration_cast<msec>(delay))
+    debounce(asio::io_service& io, const std::chrono::duration<Rep, Period>& time) :
+        debounce(io, std::chrono::duration_cast<msec>(time))
     { }
 
-    explicit debounce(asio::io_service& io, const msec& time = delay) :
-        io_(io), delay_(time)
+    explicit debounce(asio::io_service& io, const msec& time = msec(5)) :
+        io_(io), time_(time)
     { }
 
     debounce(const debounce&) = delete;
@@ -42,40 +42,35 @@ public:
     debounce& operator=(debounce&&) = delete;
 
     ////////////////////
-    using state_callback = pin::int_callback;
-    int on_state_changed(pin&, state_callback);
-    void remove_callback(int);
+    cbid on_state_changed(pin&, pin::int_callback);
+    cbid on_state_low(pin&, pin::void_callback);
+    cbid on_state_high(pin&, pin::void_callback);
 
-    static constexpr msec delay { 5 };
+    void remove_callback(cbid);
 
 private:
     ////////////////////
     asio::io_service& io_;
-    msec delay_;
+    msec time_;
 
-    class debounced
+    struct bounce
     {
-    public:
         ////////////////////
-        debounced(asio::io_service&, pin&, state_callback, msec&);
-        ~debounced() noexcept;
+        bounce(asio::io_service&, msec&, pin&, pin::int_callback);
+        ~bounce() noexcept;
 
     private:
         ////////////////////
-        pin& pin_;
-        cbid id_;
-        int state_;
+        pin& pin_; int state_; cbid id_;
 
-        state_callback fn_;
-        void pin_state_changed(int);
-
+        msec time_;
         asio::system_timer timer_;
-        msec delay_;
+
+        pin::int_callback fn_;
+        void pin_state_changed(int);
     };
 
-    // NB: using smart pointer due to asio::system_timer
-    // not supporting move semantics
-    std::map<int, std::unique_ptr<debounced>> map_;
+    std::map<cbid, std::unique_ptr<bounce>> chain_;
     int id_ = 0;
 };
 

@@ -6,48 +6,62 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 #include "debounce.hpp"
+
 #include <functional>
+#include <utility>
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace firmata
 {
 
 ////////////////////////////////////////////////////////////////////////////////
-constexpr msec debounce::delay;
-
-////////////////////////////////////////////////////////////////////////////////
-int debounce::on_state_changed(firmata::pin& pin, state_callback fn)
+cbid debounce::on_state_changed(firmata::pin& pin, pin::int_callback fn)
 {
-    map_.emplace(id_, std::make_unique<debounced>(io_, pin, std::move(fn), delay_));
-    return id_++;
+    cbid id(0, id_++);
+    chain_.emplace(id, std::unique_ptr<bounce>
+        { new bounce(io_, time_, pin, std::move(fn)) }
+    );
+    return id;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void debounce::remove_callback(int id) { map_.erase(id); }
+cbid debounce::on_state_low(firmata::pin& pin, pin::void_callback fn)
+{
+    return on_state_changed(pin, [=](int state){ if(!state) fn(); });
+}
 
 ////////////////////////////////////////////////////////////////////////////////
-debounce::debounced::debounced(asio::io_service& io, firmata::pin& pin, state_callback fn, msec& delay) :
-    pin_(pin), state_(pin_.state()), fn_(std::move(fn)), timer_(io), delay_(delay)
+cbid debounce::on_state_high(firmata::pin& pin, pin::void_callback fn)
+{
+    return on_state_changed(pin, [=](int state){ if(state) fn(); });
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void debounce::remove_callback(cbid id) { chain_.erase(id); }
+
+////////////////////////////////////////////////////////////////////////////////
+debounce::bounce::bounce(asio::io_service& io, msec& time, firmata::pin& pin, pin::int_callback fn) :
+    pin_(pin), state_(pin_.state()), time_(time), timer_(io), fn_(std::move(fn))
 {
     using namespace std::placeholders;
-    id_ = pin_.on_state_changed(std::bind(&debounced::pin_state_changed, this, _1));
+    id_ = pin_.on_state_changed(std::bind(&bounce::pin_state_changed, this, _1));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-debounce::debounced::~debounced() noexcept
+debounce::bounce::~bounce() noexcept
 {
     timer_.cancel();
     pin_.remove_callback(id_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void debounce::debounced::pin_state_changed(int)
+void debounce::bounce::pin_state_changed(int state)
 {
-    timer_.expires_from_now(delay_);
-    timer_.async_wait([&](const asio::error_code& ec)
+    timer_.expires_from_now(time_);
+    timer_.async_wait([=](const asio::error_code& ec)
     {
-        if(ec != asio::error::operation_aborted && pin_.state() != state_)
-            fn_(state_ = pin_.state());
+        if(ec != asio::error::operation_aborted && state != state_)
+            fn_(state_ = state);
     });
 }
 
