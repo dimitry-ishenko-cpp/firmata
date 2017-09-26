@@ -8,6 +8,7 @@
 #include "debounce.hpp"
 
 #include <functional>
+#include <stdexcept>
 #include <utility>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -43,8 +44,12 @@ void debounce::remove_callback(cbid id) { chain_.erase(id); }
 debounce::bounce::bounce(asio::io_service& io, msec& time, firmata::pin& pin, pin::int_callback fn) :
     pin_(pin), state_(pin_.state()), time_(time), timer_(io), fn_(std::move(fn))
 {
-    using namespace std::placeholders;
-    id_ = pin_.on_state_changed(std::bind(&bounce::pin_state_changed, this, _1));
+    if(pin_.mode() == digital_in || pin_.mode() == pullup_in)
+    {
+        using namespace std::placeholders;
+        id_ = pin_.on_state_changed(std::bind(&bounce::pin_state_changed, this, _1));
+    }
+    else throw std::invalid_argument("Invalid pin mode");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
