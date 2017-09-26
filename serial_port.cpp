@@ -50,14 +50,14 @@ void serial_port::write(msg_id id, const payload& data)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-int serial_port::on_read(read_callback fn)
+cbid serial_port::on_read(read_callback fn)
 {
     sched_async();
     return io_base::on_read(std::move(fn));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void serial_port::remove_callback(int id)
+void serial_port::remove_callback(cbid id)
 {
     io_base::remove_callback(id);
     if(chain_.empty())

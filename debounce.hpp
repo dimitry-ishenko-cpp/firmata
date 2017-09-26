@@ -63,7 +63,7 @@ private:
     private:
         ////////////////////
         pin& pin_;
-        int id_;
+        cbid id_;
         int state_;
 
         state_callback fn_;

@@ -31,8 +31,8 @@ public:
     ////////////////////
     using read_callback = callback<void(msg_id, const payload&)>;
 
-    virtual int on_read(read_callback fn) { return chain_.add(std::move(fn)); }
-    virtual void remove_callback(int id) { chain_.remove(id); }
+    virtual cbid on_read(read_callback fn) { return chain_.add(std::move(fn)); }
+    virtual void remove_callback(cbid id) { chain_.remove(id); }
 
     ////////////////////
     // block until condition or timeout
@@ -41,7 +41,7 @@ public:
 
 protected:
     ////////////////////
-    callback_chain<read_callback> chain_;
+    call_chain<read_callback> chain_;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -61,8 +61,8 @@ public:
     auto const& string() const noexcept { return string_; }
 
     using string_callback = callback<void(const std::string&)>;
-    int on_string_changed(string_callback fn) { return chain_.add(std::move(fn)); }
-    void remove_callback(int id) { chain_.remove(id); }
+    cbid on_string_changed(string_callback fn) { return chain_.add(std::move(fn)); }
+    void remove_callback(cbid id) { chain_.remove(id); }
 
     ////////////////////
     auto& pins() noexcept { return pins_; }
@@ -85,7 +85,7 @@ private:
     control(io_base*, bool dont_reset);
 
     io_base* io_;
-    int id_;
+    cbid id_;
     command cmd_;
 
     firmata::protocol protocol_;
@@ -93,7 +93,7 @@ private:
     firmata::pins pins_;
 
     std::string string_;
-    callback_chain<string_callback> chain_;
+    call_chain<string_callback> chain_;
 
     void async_read(msg_id, const payload&);
 

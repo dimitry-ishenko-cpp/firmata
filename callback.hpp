@@ -11,6 +11,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include <functional>
 #include <map>
+#include <tuple>
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace firmata
@@ -20,26 +21,36 @@ namespace firmata
 template<typename Fn>
 using callback = std::function<Fn>;
 
+using cbid = std::tuple<int, int>;
+
 ////////////////////////////////////////////////////////////////////////////////
 template<typename Fn>
-struct callback_chain
+struct call_chain
 {
     ////////////////////
-    int add(Fn fn) { cont_.emplace(id_, std::move(fn)); return id_++; }
-    void remove(int id) { cont_.erase(id); }
+    call_chain(int token = 0) noexcept : token_(token), id_(0) { }
 
-    auto empty() const noexcept { return cont_.empty(); }
+    ////////////////////
+    auto add(Fn fn)
+    {
+        cbid id(token_, id_++);
+        chain_.emplace(id, std::move(fn));
+        return id;
+    }
+    bool remove(cbid id) { return chain_.erase(id); }
+
+    auto empty() const noexcept { return chain_.empty(); }
 
     template<typename... Args>
     void operator()(Args&&... args)
     {
-        for(auto const& fn : cont_) fn.second(std::forward<Args>(args)...);
+        for(auto const& fn : chain_) fn.second(std::forward<Args>(args)...);
     }
 
 private:
     ////////////////////
-    std::map<int, Fn> cont_;
-    int id_ = 0;
+    int token_, id_;
+    std::map<cbid, Fn> chain_;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
