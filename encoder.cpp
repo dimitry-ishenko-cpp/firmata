@@ -22,7 +22,7 @@ encoder::encoder(pin& pin1, pin& pin2) : pin1_(pin1), pin2_(pin2)
     && (pin2.mode() == digital_in || pin2.mode() == pullup_in))
     {
         using namespace std::placeholders;
-        id_ = pin1_.on_state_low(std::bind(&encoder::pin_state_low, this));
+        id_ = pin1_.on_state_changed(std::bind(&encoder::pin_state_changed, this, _1));
     }
     else throw std::invalid_argument("Invalid pin mode");
 }
@@ -41,12 +41,18 @@ void encoder::remove_callback(cbid id)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void encoder::pin_state_low()
+void encoder::pin_state_changed(int state)
 {
-    if(pin2_.state()) { count_--; ccw_(); }
-    else { count_++; cw_(); }
+    if(state)
+    {
+        step_ += pin2_.state() ? 1 : -1;
 
-    changed_(count_);
+             if(step_ ==  2) {  cw_(); changed_(++count_); }
+        else if(step_ == -2) { ccw_(); changed_(--count_); }
+
+        step_ = 0;
+    }
+    else step_ += pin2_.state() ? -1 : 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -52,8 +52,9 @@ private:
     call_chain<void_callback> cw_     { 1 };
     call_chain<void_callback> ccw_    { 2 };
 
-    void pin_state_low();
+    void pin_state_changed(int);
     int count_ = 0;
+    int step_ = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
