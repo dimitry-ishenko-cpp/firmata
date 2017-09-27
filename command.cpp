@@ -24,8 +24,8 @@ void command::report_digital(firmata::pos pos, bool value)
 
         auto id = static_cast<msg_id>(report_port_base + port);
 
-        if(before && !now) io_->write(id, { false });
-        else if(!before && now) io_->write(id, { true });
+        if(before && !now) io_.write(id, { false });
+        else if(!before && now) io_.write(id, { true });
     }
 }
 
@@ -35,14 +35,14 @@ void command::report_analog(firmata::pos pos, bool value)
     if(pos != npos && pos < analog_count)
     {
         auto id = static_cast<msg_id>(report_analog_base + pos);
-        io_->write(id, { value });
+        io_.write(id, { value });
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void command::digital_value(firmata::pos pos, bool value)
 {
-    io_->write(firmata::digital_value, { pos, value });
+    io_.write(firmata::digital_value, { pos, value });
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -51,13 +51,13 @@ void command::analog_value(firmata::pos pos, int value)
     payload data = to_data(value);
     data.insert(data.begin(), pos);
 
-    io_->write(ext_analog_value, data);
+    io_.write(ext_analog_value, data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void command::pin_mode(firmata::pos pos, firmata::mode mode)
 {
-    io_->write(firmata::pin_mode, { pos, mode });
+    io_.write(firmata::pin_mode, { pos, mode });
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -67,18 +67,18 @@ void command::pin_state(firmata::pin& pin, int state)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void command::reset() { io_->write(firmata::reset); }
+void command::reset() { io_.write(firmata::reset); }
 
 ////////////////////////////////////////////////////////////////////////////////
 void command::string(const std::string& s)
 {
-    io_->write(string_data, to_data(s));
+    io_.write(string_data, to_data(s));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 protocol command::query_version(const msec& time)
 {
-    io_->write(version);
+    io_.write(version);
     auto data = wait_until(version, time);
 
     firmata::protocol protocol { };
@@ -93,7 +93,7 @@ protocol command::query_version(const msec& time)
 ////////////////////////////////////////////////////////////////////////////////
 firmware command::query_firmware(const msec& time)
 {
-    io_->write(firmware_query);
+    io_.write(firmware_query);
     auto data = wait_until(firmware_response, time);
 
     firmata::firmware firmware { };
@@ -109,7 +109,7 @@ firmware command::query_firmware(const msec& time)
 ////////////////////////////////////////////////////////////////////////////////
 firmata::pins command::query_capability(const msec& time)
 {
-    io_->write(capability_query);
+    io_.write(capability_query);
     auto data = wait_until(capability_response, time);
 
     firmata::pins pins;
@@ -139,7 +139,7 @@ firmata::pins command::query_capability(const msec& time)
 ////////////////////////////////////////////////////////////////////////////////
 void command::query_analog_mapping(firmata::pins& pins, const msec& time)
 {
-    io_->write(analog_mapping_query);
+    io_.write(analog_mapping_query);
     auto data = wait_until(analog_mapping_response, time);
 
     auto pi = pins.begin();
@@ -152,7 +152,7 @@ void command::query_state(firmata::pins& pins, const msec& time)
 {
     for(auto& pin : pins)
     {
-        io_->write(pin_state_query, { pin.pos() });
+        io_.write(pin_state_query, { pin.pos() });
         auto data = wait_until(pin_state_response, time);
 
         if(data.size() >= 3 && data[0] == pin.pos())
@@ -195,14 +195,14 @@ void command::set_report(firmata::pins& pins)
 payload command::wait_until(msg_id reply_id, const msec& time)
 {
     payload reply_data;
-    auto id = io_->on_read([&](msg_id id, const payload& data)
+    auto id = io_.on_read([&](msg_id id, const payload& data)
         { if(id == reply_id) reply_data = data; }
     );
 
-    if(!io_->wait_until([&](){ return !reply_data.empty(); }, time))
+    if(!io_.wait_until([&](){ return !reply_data.empty(); }, time))
         throw timeout_error("Read timed out");
 
-    io_->remove_callback(id);
+    io_.remove_callback(id);
     return reply_data;
 }
 

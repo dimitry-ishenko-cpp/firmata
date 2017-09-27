@@ -32,7 +32,7 @@ class command
 {
 public:
     ////////////////////
-    explicit command(io_base* io) : io_(io) { }
+    explicit command(io_base& io) : io_(io) { }
 
     command(const command&) = delete;
     command(command&&) = delete;
@@ -63,7 +63,7 @@ public:
 
 private:
     ////////////////////
-    io_base* io_;
+    io_base& io_;
 
     // ports that are currently being monitored
     std::array<std::bitset<8>, port_count> ports_;

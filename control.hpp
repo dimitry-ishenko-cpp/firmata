@@ -31,8 +31,8 @@ class control
 {
 public:
     ////////////////////
-    explicit control(io_base* io) : control(io, false) { }
-    control(io_base* io, dont_reset_t) : control(io, true) { }
+    explicit control(io_base& io) : control(io, false) { }
+    control(io_base& io, dont_reset_t) : control(io, true) { }
     ~control() noexcept;
 
     control(const control&) = delete;
@@ -82,9 +82,9 @@ public:
 
 private:
     ////////////////////
-    control(io_base*, bool dont_reset);
+    control(io_base&, bool dont_reset);
 
-    io_base* io_;
+    io_base& io_;
     cbid id_;
     command cmd_;
 

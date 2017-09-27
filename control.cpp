@@ -18,7 +18,7 @@ using namespace std::chrono_literals;
 msec control::time_ = 100ms;
 
 ////////////////////////////////////////////////////////////////////////////////
-control::control(io_base* io, bool dont_reset) : io_(io), cmd_(io)
+control::control(io_base& io, bool dont_reset) : io_(io), cmd_(io)
 {
     if(!dont_reset) cmd_.reset();
 
@@ -32,11 +32,11 @@ control::control(io_base* io, bool dont_reset) : io_(io), cmd_(io)
     cmd_.set_report(pins_);
 
     using namespace std::placeholders;
-    id_ = io_->on_read(std::bind(&control::async_read, this, _1, _2));
+    id_ = io_.on_read(std::bind(&control::async_read, this, _1, _2));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-control::~control() noexcept { io_->remove_callback(id_); }
+control::~control() noexcept { io_.remove_callback(id_); }
 
 ////////////////////////////////////////////////////////////////////////////////
 void control::reset()
