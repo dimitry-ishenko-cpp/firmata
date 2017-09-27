@@ -31,13 +31,13 @@ encoder::encoder(pin& pin1, pin& pin2) : pin1_(pin1), pin2_(pin2)
 encoder::~encoder() { pin1_.remove_callback(id_); }
 
 ////////////////////////////////////////////////////////////////////////////////
-cbid encoder::on_count_changed(int_callback fn) { return changed_.add(std::move(fn)); }
-cbid encoder::on_rotate_cw(void_callback fn) { return cw_.add(std::move(fn)); }
-cbid encoder::on_rotate_ccw(void_callback fn) { return ccw_.add(std::move(fn)); }
+cbid encoder::on_rotate(int_callback fn) { return rotate_.add(std::move(fn)); }
+cbid encoder::on_rotate_cw(void_callback fn) { return rotate_cw_.add(std::move(fn)); }
+cbid encoder::on_rotate_ccw(void_callback fn) { return rotate_ccw_.add(std::move(fn)); }
 
 void encoder::remove_callback(cbid id)
 {
-    changed_.remove(id) || cw_.remove(id) || ccw_.remove(id);
+    rotate_.remove(id) || rotate_cw_.remove(id) || rotate_ccw_.remove(id);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -45,14 +45,19 @@ void encoder::pin_state_changed(int state)
 {
     if(state)
     {
-        step_ += pin2_.state() ? 1 : -1;
-
-             if(step_ ==  2) {  cw_(); changed_(++count_); }
-        else if(step_ == -2) { ccw_(); changed_(--count_); }
-
-        step_ = 0;
+        auto step = pin2_.state() ? cw : ccw;
+        if(step == step_)
+        {
+            switch(step)
+            {
+            case  no: break;
+            case  cw: rotate_( 1); rotate_cw_(); break;
+            case ccw: rotate_(-1); rotate_ccw_(); break;
+            }
+        }
+        step_ = no;
     }
-    else step_ += pin2_.state() ? -1 : 1;
+    else step_ = pin2_.state() ? ccw : cw;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

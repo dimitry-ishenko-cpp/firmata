@@ -31,14 +31,10 @@ public:
     encoder& operator=(encoder&&) = delete;
 
     ////////////////////
-    void count(int n) noexcept { count_ = n; }
-    auto count() const noexcept { return count_; }
-
-    ////////////////////
     using int_callback = callback<void(int)>;
     using void_callback = callback<void()>;
 
-    cbid on_count_changed(int_callback);
+    cbid on_rotate(int_callback);
     cbid on_rotate_cw(void_callback);
     cbid on_rotate_ccw(void_callback);
 
@@ -48,13 +44,13 @@ private:
     ////////////////////
     pin& pin1_; pin& pin2_; cbid id_;
 
-    call_chain<int_callback> changed_ { 0 };
-    call_chain<void_callback> cw_     { 1 };
-    call_chain<void_callback> ccw_    { 2 };
+    call_chain<int_callback>  rotate_     { 0 };
+    call_chain<void_callback> rotate_cw_  { 1 };
+    call_chain<void_callback> rotate_ccw_ { 2 };
 
     void pin_state_changed(int);
-    int count_ = 0;
-    int step_ = 0;
+
+    enum { no, cw, ccw } step_ = no;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
