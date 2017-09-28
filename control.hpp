@@ -9,7 +9,7 @@
 #define FIRMATA_CONTROL_HPP
 
 ////////////////////////////////////////////////////////////////////////////////
-#include "firmata/callback.hpp"
+#include "firmata/call_chain.hpp"
 #include "firmata/command.hpp"
 #include "firmata/io_base.hpp"
 #include "firmata/pins.hpp"
@@ -60,9 +60,9 @@ public:
     // last string received from host
     auto const& string() const noexcept { return string_; }
 
-    using string_callback = callback<void(const std::string&)>;
-    cbid on_string_changed(string_callback fn) { return chain_.add(std::move(fn)); }
-    void remove_callback(cbid id) { chain_.remove(id); }
+    using string_callback = call<void(const std::string&)>;
+    cid on_string_changed(string_callback fn) { return chain_.insert(std::move(fn)); }
+    void remove_callback(cid id) { chain_.erase(id); }
 
     ////////////////////
     auto& pins() noexcept { return pins_; }
@@ -85,7 +85,7 @@ private:
     control(io_base&, bool dont_reset);
 
     io_base& io_;
-    cbid id_;
+    cid id_;
     command cmd_;
 
     firmata::protocol protocol_;

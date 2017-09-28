@@ -5,8 +5,8 @@
 // Distributed under the GNU GPL license. See the LICENSE.md file for details.
 
 ////////////////////////////////////////////////////////////////////////////////
-#ifndef FIRMATA_CALLBACK_HPP
-#define FIRMATA_CALLBACK_HPP
+#ifndef FIRMATA_CALL_CHAIN_HPP
+#define FIRMATA_CALL_CHAIN_HPP
 
 ////////////////////////////////////////////////////////////////////////////////
 #include <functional>
@@ -18,28 +18,34 @@ namespace firmata
 {
 
 ////////////////////////////////////////////////////////////////////////////////
+// Alias for function
 template<typename Fn>
-using callback = std::function<Fn>;
+using call = std::function<Fn>;
 
-using cbid = std::tuple<int, int>;
+// Call id
+using cid = std::tuple<unsigned, unsigned>;
 
 ////////////////////////////////////////////////////////////////////////////////
+// Chain of functions
 template<typename Fn>
 struct call_chain
 {
     ////////////////////
-    call_chain(int token = 0) noexcept : token_(token), id_(0) { }
+    call_chain(unsigned token = 0) noexcept : token_(token), id_(0) { }
 
     ////////////////////
-    auto add(Fn fn)
+    auto insert(Fn fn)
     {
-        cbid id(token_, id_++);
+        cid id(token_, id_++);
         chain_.emplace(id, std::move(fn));
         return id;
     }
-    bool remove(cbid id) { return chain_.erase(id); }
+
+    bool erase(cid id) { return chain_.erase(id); }
+    void clear() { chain_.clear(); }
 
     auto empty() const noexcept { return chain_.empty(); }
+    auto size() const noexcept { return chain_.size(); }
 
     template<typename... Args>
     void operator()(Args&&... args)
@@ -49,8 +55,8 @@ struct call_chain
 
 private:
     ////////////////////
-    int token_, id_;
-    std::map<cbid, Fn> chain_;
+    unsigned token_, id_;
+    std::map<cid, Fn> chain_;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

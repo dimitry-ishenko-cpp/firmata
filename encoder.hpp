@@ -9,7 +9,7 @@
 #define FIRMATA_ENCODER_HPP
 
 ////////////////////////////////////////////////////////////////////////////////
-#include "firmata/callback.hpp"
+#include "firmata/call_chain.hpp"
 #include "firmata/pin.hpp"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -31,18 +31,18 @@ public:
     encoder& operator=(encoder&&) = delete;
 
     ////////////////////
-    using int_callback = callback<void(int)>;
-    using void_callback = callback<void()>;
+    using int_callback = call<void(int)>;
+    using void_callback = call<void()>;
 
-    cbid on_rotate(int_callback);
-    cbid on_rotate_cw(void_callback);
-    cbid on_rotate_ccw(void_callback);
+    cid on_rotate(int_callback);
+    cid on_rotate_cw(void_callback);
+    cid on_rotate_ccw(void_callback);
 
-    void remove_callback(cbid);
+    void remove_callback(cid);
 
 private:
     ////////////////////
-    pin& pin1_; pin& pin2_; cbid id_;
+    pin& pin1_; pin& pin2_; cid id_;
 
     call_chain<int_callback>  rotate_     { 0 };
     call_chain<void_callback> rotate_cw_  { 1 };

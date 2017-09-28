@@ -31,13 +31,13 @@ encoder::encoder(pin& pin1, pin& pin2) : pin1_(pin1), pin2_(pin2)
 encoder::~encoder() { pin1_.remove_callback(id_); }
 
 ////////////////////////////////////////////////////////////////////////////////
-cbid encoder::on_rotate(int_callback fn) { return rotate_.add(std::move(fn)); }
-cbid encoder::on_rotate_cw(void_callback fn) { return rotate_cw_.add(std::move(fn)); }
-cbid encoder::on_rotate_ccw(void_callback fn) { return rotate_ccw_.add(std::move(fn)); }
+cid encoder::on_rotate(int_callback fn) { return rotate_.insert(std::move(fn)); }
+cid encoder::on_rotate_cw(void_callback fn) { return rotate_cw_.insert(std::move(fn)); }
+cid encoder::on_rotate_ccw(void_callback fn) { return rotate_ccw_.insert(std::move(fn)); }
 
-void encoder::remove_callback(cbid id)
+void encoder::remove_callback(cid id)
 {
-    rotate_.remove(id) || rotate_cw_.remove(id) || rotate_ccw_.remove(id);
+    rotate_.erase(id) || rotate_cw_.erase(id) || rotate_ccw_.erase(id);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -16,9 +16,9 @@ namespace firmata
 {
 
 ////////////////////////////////////////////////////////////////////////////////
-cbid debounce::on_state_changed(firmata::pin& pin, pin::int_callback fn)
+cid debounce::on_state_changed(firmata::pin& pin, pin::int_callback fn)
 {
-    cbid id(0, id_++);
+    cid id(0, id_++);
     chain_.emplace(id, std::unique_ptr<bounce>
         { new bounce(io_, time_, pin, std::move(fn)) }
     );
@@ -26,19 +26,19 @@ cbid debounce::on_state_changed(firmata::pin& pin, pin::int_callback fn)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-cbid debounce::on_state_low(firmata::pin& pin, pin::void_callback fn)
+cid debounce::on_state_low(firmata::pin& pin, pin::void_callback fn)
 {
     return on_state_changed(pin, [=](int state){ if(!state) fn(); });
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-cbid debounce::on_state_high(firmata::pin& pin, pin::void_callback fn)
+cid debounce::on_state_high(firmata::pin& pin, pin::void_callback fn)
 {
     return on_state_changed(pin, [=](int state){ if(state) fn(); });
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void debounce::remove_callback(cbid id) { chain_.erase(id); }
+void debounce::remove_callback(cid id) { chain_.erase(id); }
 
 ////////////////////////////////////////////////////////////////////////////////
 debounce::bounce::bounce(asio::io_service& io, msec& time, firmata::pin& pin, pin::int_callback fn) :

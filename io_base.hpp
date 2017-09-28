@@ -9,7 +9,7 @@
 #define FIRMATA_IO_BASE_HPP
 
 ////////////////////////////////////////////////////////////////////////////////
-#include "firmata/callback.hpp"
+#include "firmata/call_chain.hpp"
 #include "firmata/types.hpp"
 
 #include <functional>
@@ -29,10 +29,10 @@ public:
     virtual void write(msg_id, const payload& = { }) = 0;
 
     ////////////////////
-    using read_callback = callback<void(msg_id, const payload&)>;
+    using read_callback = call<void(msg_id, const payload&)>;
 
-    virtual cbid on_read(read_callback fn) { return chain_.add(std::move(fn)); }
-    virtual void remove_callback(cbid id) { chain_.remove(id); }
+    virtual cid on_read(read_callback fn) { return chain_.insert(std::move(fn)); }
+    virtual void remove_callback(cid id) { chain_.erase(id); }
 
     ////////////////////
     // block until condition or timeout

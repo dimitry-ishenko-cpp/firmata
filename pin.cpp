@@ -53,13 +53,13 @@ void pin::value(int value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-cbid pin::on_state_changed(int_callback fn) { return changed_.add(std::move(fn)); }
-cbid pin::on_state_low(void_callback fn) { return low_.add(std::move(fn)); }
-cbid pin::on_state_high(void_callback fn) { return high_.add(std::move(fn)); }
+cid pin::on_state_changed(int_callback fn) { return changed_.insert(std::move(fn)); }
+cid pin::on_state_low(void_callback fn) { return low_.insert(std::move(fn)); }
+cid pin::on_state_high(void_callback fn) { return high_.insert(std::move(fn)); }
 
-void pin::remove_callback(cbid id)
+void pin::remove_callback(cid id)
 {
-    changed_.remove(id) || low_.remove(id) || high_.remove(id);
+    changed_.erase(id) || low_.erase(id) || high_.erase(id);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

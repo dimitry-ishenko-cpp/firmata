@@ -9,7 +9,7 @@
 #define FIRMATA_PIN_HPP
 
 ////////////////////////////////////////////////////////////////////////////////
-#include "firmata/callback.hpp"
+#include "firmata/call_chain.hpp"
 #include "firmata/types.hpp"
 
 #include <map>
@@ -69,14 +69,14 @@ public:
     auto state() const noexcept { return state_; }
 
     ////////////////////
-    using int_callback = callback<void(int)>;
-    using void_callback = callback<void()>;
+    using int_callback = call<void(int)>;
+    using void_callback = call<void()>;
 
-    cbid on_state_changed(int_callback);
-    cbid on_state_low(void_callback);
-    cbid on_state_high(void_callback);
+    cid on_state_changed(int_callback);
+    cid on_state_low(void_callback);
+    cid on_state_high(void_callback);
 
-    void remove_callback(cbid);
+    void remove_callback(cid);
 
 private:
     ////////////////////

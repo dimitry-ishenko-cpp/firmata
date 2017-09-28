@@ -42,11 +42,11 @@ public:
     debounce& operator=(debounce&&) = delete;
 
     ////////////////////
-    cbid on_state_changed(pin&, pin::int_callback);
-    cbid on_state_low(pin&, pin::void_callback);
-    cbid on_state_high(pin&, pin::void_callback);
+    cid on_state_changed(pin&, pin::int_callback);
+    cid on_state_low(pin&, pin::void_callback);
+    cid on_state_high(pin&, pin::void_callback);
 
-    void remove_callback(cbid);
+    void remove_callback(cid);
 
 private:
     ////////////////////
@@ -61,7 +61,7 @@ private:
 
     private:
         ////////////////////
-        pin& pin_; int state_; cbid id_;
+        pin& pin_; int state_; cid id_;
 
         msec time_;
         asio::system_timer timer_;
@@ -70,7 +70,7 @@ private:
         void pin_state_changed(int);
     };
 
-    std::map<cbid, std::unique_ptr<bounce>> chain_;
+    std::map<cid, std::unique_ptr<bounce>> chain_;
     int id_ = 0;
 };
 
