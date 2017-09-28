@@ -60,15 +60,11 @@ cid serial_port::on_read(read_call fn)
 void serial_port::remove_call(cid id)
 {
     io_base::remove_call(id);
-    if(chain_.empty())
-    {
-        port_.cancel();
-        timer_.cancel();
-    }
+    if(chain_.empty()) { port_.cancel(); timer_.cancel(); }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-bool serial_port::wait_until(const condition& fn, const msec& time)
+bool serial_port::wait_until(const condition& cond, const msec& time)
 {
     bool expired = false;
 
@@ -76,12 +72,12 @@ bool serial_port::wait_until(const condition& fn, const msec& time)
     {
         timer_.expires_from_now(time);
         timer_.async_wait([&](const asio::error_code& ec)
-        {
-            if(!ec) { expired = true; port_.cancel(); }
-        });
+            { if(!ec) { expired = true; port_.cancel(); } }
+        );
     }
 
-    while(!fn())
+    // wait for condition
+    while(!cond())
     {
         port_.get_io_service().reset();
         port_.get_io_service().run_one();
@@ -98,7 +94,7 @@ void serial_port::sched_async()
 {
     using namespace std::placeholders;
 
-    // read into one buffer
+    // read into single read buffer
     port_.async_read_some(asio::buffer(one_),
         std::bind(&serial_port::async_read, this, _1, _2)
     );
@@ -112,17 +108,11 @@ void serial_port::async_read(const asio::error_code& ec, std::size_t n)
     // copy data into overall buffer
     overall_.insert(overall_.end(), std::begin(one_), std::next(one_, n));
 
-    for(;;)
-    {
-        msg_id id;
-        payload data;
-        std::tie(id, data) = parse_one();
+    msg_id id;
+    payload data;
+    std::tie(id, data) = parse_one();
 
-        // no or incomplete message
-        if(data.empty()) break;
-
-        chain_(id, data);
-    }
+    if(data.size()) chain_(id, data);
 
     sched_async();
 }
@@ -149,12 +139,12 @@ std::tuple<msg_id, payload> serial_port::parse_one()
         // get message id
         id = static_cast<msg_id>(*ci++);
 
-        // if this is a sysex message, get sysex id
+        // if sysex message, get sysex id
         if(is_sysex(id))
         {
             id = sysex(*ci++);
 
-            // if this is an extended sysex message, get extended id
+            // if extended sysex message, get extended id
             if(is_ext_sysex(id))
             {
                 // need 2 bytes for extended id
@@ -166,6 +156,7 @@ std::tuple<msg_id, payload> serial_port::parse_one()
             for(auto ci_end = ci; ci_end != overall_.end(); ++ci_end)
                 if(*ci_end == end_sysex)
                 {
+                    // xfer from overall_ to data
                     data.insert(data.end(), ci, ci_end);
                     overall_.erase(overall_.begin(), std::next(ci_end)); // chomp end_sysex
                     break;
@@ -174,6 +165,7 @@ std::tuple<msg_id, payload> serial_port::parse_one()
         else
         {
             // standard message
+            // xfer from overall_ to data
             auto ci_end = ci + 2;
             data.insert(data.end(), ci, ci_end);
             overall_.erase(overall_.begin(), ci_end);

@@ -40,6 +40,8 @@ using char_size = bits;
 using namespace literals;
 
 ////////////////////////////////////////////////////////////////////////////////
+// Communication with Firmata host via serial port
+//
 class serial_port : public io_base
 {
 public:
@@ -61,9 +63,13 @@ public:
     void set(char_size);
 
     ////////////////////
+    // write message to host
     virtual void write(msg_id, const payload& = { }) override;
 
+    // install read callback
     virtual cid on_read(read_call) override;
+
+    // remove read callback
     virtual void remove_call(cid) override;
 
     // block until condition
@@ -74,11 +80,13 @@ private:
     asio::serial_port port_;
     asio::system_timer timer_;
 
-    std::vector<byte> overall_;
-    char one_[128];
+    std::vector<byte> overall_; // overall buffer
+    char one_[128]; // single read buffer
 
     void sched_async();
     void async_read(const asio::error_code&, std::size_t);
+
+    // parse one message from overall_ buffer
     std::tuple<msg_id, payload> parse_one();
 };
 
