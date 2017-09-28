@@ -32,7 +32,7 @@ asio::io_service io;
 firmata::serial_port device(io, "/dev/ttyACM0");
 device.set(57600_baud);
 
-firmata::control arduino(&device);
+firmata::control arduino(device);
 
 for(auto& pin : arduino.pins())
 {
@@ -52,8 +52,11 @@ arduino.pin(D1).mode(digital_in);
 
 firmata::encoder encoder(arduino.pin(D0), arduino.pin(D1));
 
-encoder.on_count_changed([](int count)
+encoder.on_rotate([](int step)
 {
+    static int count = 0;
+
+    count += step;
     std::cout << "encoder: count=" << count << std::endl;
 });
 
