@@ -15,18 +15,9 @@ namespace firmata
 ////////////////////////////////////////////////////////////////////////////////
 firmata::pin& pins::get(firmata::mode mode, firmata::pos pos)
 {
-    if(mode == analog_in)
-    {
-        for(auto& pin : pins_)
-            if(pin.analog() == pos) return pin;
-    }
-    else
-    {
-        for(auto& pin : pins_)
-            if(pin.supports(mode) && 0 == pos--) return pin;
-    }
-
-    throw std::out_of_range("Pin not found");
+    return const_cast<firmata::pin&>(
+        static_cast<const pins&>(*this).get(mode, pos)
+    );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -34,13 +25,14 @@ const firmata::pin& pins::get(firmata::mode mode, firmata::pos pos) const
 {
     if(mode == analog_in)
     {
-        for(auto& pin : pins_)
-            if(pin.analog() == pos) return pin;
+        // analog pins are treated specially,
+        // as they may be numbered differently
+        for(auto& pin : pins_) if(pin.analog() == pos) return pin;
     }
     else
     {
-        for(auto& pin : pins_)
-            if(pin.supports(mode) && 0 == pos--) return pin;
+        // other pins don't have specific numbers
+        for(auto& pin : pins_) if(pin.supports(mode) && 0 == pos--) return pin;
     }
 
     throw std::out_of_range("Pin not found");

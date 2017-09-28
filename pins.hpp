@@ -21,6 +21,8 @@ namespace firmata
 {
 
 ////////////////////////////////////////////////////////////////////////////////
+// Collection of pins
+//
 struct pins
 {
     ////////////////////
@@ -33,13 +35,16 @@ struct pins
     pins& operator=(pins&&) = default;
 
     ////////////////////
+    // standard iterators
     auto begin() noexcept { return pins_.begin(); }
     const auto begin() const noexcept { return pins_.begin(); }
 
     auto end() noexcept { return pins_.end(); }
     const auto end() const noexcept { return pins_.end(); }
 
+    // number of pins
     auto count() const noexcept { return pins_.size(); }
+    // number of pins that support certain mode
     auto count(mode n) const noexcept
     {
         return std::count_if(begin(), end(),
@@ -48,12 +53,15 @@ struct pins
     }
 
     ////////////////////
+    // get pin
     auto& get(pos n) { return pins_.at(n); }
     const auto& get(pos n) const { return pins_.at(n); }
 
+    // get analog pin
     auto& get(analog n) { return get(analog_in, n); }
     auto const& get(analog n) const { return get(analog_in, n); }
 
+    // get pin that supports certain mode
     firmata::pin& get(mode, pos);
     const firmata::pin& get(mode, pos) const;
 
@@ -62,8 +70,10 @@ private:
     ////////////////////
     std::vector<firmata::pin> pins_;
 
-    void push_back(firmata::pin&& pin) { pins_.push_back(std::move(pin)); }
+    void push_back(firmata::pin pin) { pins_.push_back(std::move(pin)); }
+
     auto& back() noexcept { return pins_.back(); }
+    auto const& back() const noexcept { return pins_.back(); }
 
     friend class command;
 };
