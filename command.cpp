@@ -169,7 +169,8 @@ void command::query_state(firmata::pins& pins, const msec& time)
 ////////////////////////////////////////////////////////////////////////////////
 void command::set_report(firmata::pins& pins)
 {
-    // enable reporting for all inputs and disable for all outputs
+    // enable reporting for all inputs
+    // and disable for all outputs
     for(auto& pin : pins)
         switch(pin.mode())
         {
@@ -199,8 +200,11 @@ payload command::wait_until(msg_id reply_id, const msec& time)
         { if(id == reply_id) reply_data = data; }
     );
 
-    if(!io_.wait_until([&](){ return !reply_data.empty(); }, time))
+    if(!io_.wait_until([&](){ return reply_data.size(); }, time))
+    {
+        io_.remove_call(id);
         throw timeout_error("Read timed out");
+    }
 
     io_.remove_call(id);
     return reply_data;
