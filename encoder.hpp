@@ -31,22 +31,25 @@ public:
     encoder& operator=(encoder&&) = delete;
 
     ////////////////////
-    using int_callback = call<void(int)>;
-    using void_callback = call<void()>;
+    using int_call = call<void(int)>;
+    using void_call = call<void()>;
 
-    cid on_rotate(int_callback);
-    cid on_rotate_cw(void_callback);
-    cid on_rotate_ccw(void_callback);
+    // install rotate callback
+    cid on_rotate(int_call);
+    cid on_rotate_cw(void_call);
+    cid on_rotate_ccw(void_call);
 
-    void remove_callback(cid);
+    // remove callback
+    void remove_call(cid);
 
 private:
     ////////////////////
     pin& pin1_; pin& pin2_; cid id_;
 
-    call_chain<int_callback>  rotate_     { 0 };
-    call_chain<void_callback> rotate_cw_  { 1 };
-    call_chain<void_callback> rotate_ccw_ { 2 };
+    // rotate call chains
+    call_chain< int_call> rotate_     { 0 };
+    call_chain<void_call> rotate_cw_  { 1 };
+    call_chain<void_call> rotate_ccw_ { 2 };
 
     void pin_state_changed(int);
 
