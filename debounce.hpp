@@ -22,6 +22,8 @@ namespace firmata
 {
 
 ////////////////////////////////////////////////////////////////////////////////
+// Pin debouncer
+//
 class debounce
 {
 public:
@@ -42,11 +44,13 @@ public:
     debounce& operator=(debounce&&) = delete;
 
     ////////////////////
+    // install state changed/low/high callback
     cid on_state_changed(pin&, pin::int_call);
     cid on_state_low(pin&, pin::void_call);
     cid on_state_high(pin&, pin::void_call);
 
-    void remove_callback(cid);
+    // remove callback
+    void remove_call(cid);
 
 private:
     ////////////////////

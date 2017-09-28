@@ -38,7 +38,7 @@ cid debounce::on_state_high(firmata::pin& pin, pin::void_call fn)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void debounce::remove_callback(cid id) { chain_.erase(id); }
+void debounce::remove_call(cid id) { chain_.erase(id); }
 
 ////////////////////////////////////////////////////////////////////////////////
 debounce::bounce::bounce(asio::io_service& io, msec& time, firmata::pin& pin, pin::int_call fn) :
