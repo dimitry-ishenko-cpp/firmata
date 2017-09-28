@@ -43,9 +43,6 @@ namespace literals
 constexpr bits operator"" _bits(unsigned long long n) noexcept
 { return static_cast<bits>(n); }
 
-constexpr bool on = true;
-constexpr bool off = false;
-
 // invalid pin
 constexpr pos npos = -1;
 
@@ -159,7 +156,10 @@ enum msg_id : dword
 constexpr auto size(msg_id id) noexcept
 { return is_ext_sysex(id) ? sizeof(dword) : is_sysex(id) ? sizeof(word) : sizeof(byte); }
 
+// max number of digital ports
 constexpr auto port_count = port_value_end - port_value_base;
+
+// max number of analog pins
 constexpr auto analog_count = analog_value_end - analog_value_base;
 
 ////////////////////////////////////////////////////////////////////////////////
