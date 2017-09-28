@@ -16,7 +16,7 @@ namespace firmata
 {
 
 ////////////////////////////////////////////////////////////////////////////////
-cid debounce::on_state_changed(firmata::pin& pin, pin::int_callback fn)
+cid debounce::on_state_changed(firmata::pin& pin, pin::int_call fn)
 {
     cid id(0, id_++);
     chain_.emplace(id, std::unique_ptr<bounce>
@@ -26,13 +26,13 @@ cid debounce::on_state_changed(firmata::pin& pin, pin::int_callback fn)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-cid debounce::on_state_low(firmata::pin& pin, pin::void_callback fn)
+cid debounce::on_state_low(firmata::pin& pin, pin::void_call fn)
 {
     return on_state_changed(pin, [=](int state){ if(!state) fn(); });
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-cid debounce::on_state_high(firmata::pin& pin, pin::void_callback fn)
+cid debounce::on_state_high(firmata::pin& pin, pin::void_call fn)
 {
     return on_state_changed(pin, [=](int state){ if(state) fn(); });
 }
@@ -41,7 +41,7 @@ cid debounce::on_state_high(firmata::pin& pin, pin::void_callback fn)
 void debounce::remove_callback(cid id) { chain_.erase(id); }
 
 ////////////////////////////////////////////////////////////////////////////////
-debounce::bounce::bounce(asio::io_service& io, msec& time, firmata::pin& pin, pin::int_callback fn) :
+debounce::bounce::bounce(asio::io_service& io, msec& time, firmata::pin& pin, pin::int_call fn) :
     pin_(pin), state_(pin_.state()), time_(time), timer_(io), fn_(std::move(fn))
 {
     if(pin_.mode() == digital_in || pin_.mode() == pullup_in)
@@ -56,7 +56,7 @@ debounce::bounce::bounce(asio::io_service& io, msec& time, firmata::pin& pin, pi
 debounce::bounce::~bounce() noexcept
 {
     timer_.cancel();
-    pin_.remove_callback(id_);
+    pin_.remove_call(id_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

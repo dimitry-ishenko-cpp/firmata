@@ -53,17 +53,17 @@ void pin::value(int value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-cid pin::on_state_changed(int_callback fn) { return changed_.insert(std::move(fn)); }
-cid pin::on_state_low(void_callback fn) { return low_.insert(std::move(fn)); }
-cid pin::on_state_high(void_callback fn) { return high_.insert(std::move(fn)); }
+cid pin::on_state_changed(int_call fn) { return changed_.insert(std::move(fn)); }
+cid pin::on_state_low(void_call fn) { return low_.insert(std::move(fn)); }
+cid pin::on_state_high(void_call fn) { return high_.insert(std::move(fn)); }
 
-void pin::remove_callback(cid id)
+void pin::remove_call(cid id)
 {
     changed_.erase(id) || low_.erase(id) || high_.erase(id);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void pin::change_state(int state)
+void pin::state(int state)
 {
     if(state_ != state)
     {

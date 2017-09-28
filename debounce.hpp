@@ -42,9 +42,9 @@ public:
     debounce& operator=(debounce&&) = delete;
 
     ////////////////////
-    cid on_state_changed(pin&, pin::int_callback);
-    cid on_state_low(pin&, pin::void_callback);
-    cid on_state_high(pin&, pin::void_callback);
+    cid on_state_changed(pin&, pin::int_call);
+    cid on_state_low(pin&, pin::void_call);
+    cid on_state_high(pin&, pin::void_call);
 
     void remove_callback(cid);
 
@@ -56,7 +56,7 @@ private:
     struct bounce
     {
         ////////////////////
-        bounce(asio::io_service&, msec&, pin&, pin::int_callback);
+        bounce(asio::io_service&, msec&, pin&, pin::int_call);
         ~bounce() noexcept;
 
     private:
@@ -66,7 +66,7 @@ private:
         msec time_;
         asio::system_timer timer_;
 
-        pin::int_callback fn_;
+        pin::int_call fn_;
         void pin_state_changed(int);
     };
 

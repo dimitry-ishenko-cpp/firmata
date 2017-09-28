@@ -28,7 +28,7 @@ encoder::encoder(pin& pin1, pin& pin2) : pin1_(pin1), pin2_(pin2)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-encoder::~encoder() { pin1_.remove_callback(id_); }
+encoder::~encoder() { pin1_.remove_call(id_); }
 
 ////////////////////////////////////////////////////////////////////////////////
 cid encoder::on_rotate(int_callback fn) { return rotate_.insert(std::move(fn)); }

@@ -63,7 +63,7 @@ void command::pin_mode(firmata::pos pos, firmata::mode mode)
 ////////////////////////////////////////////////////////////////////////////////
 void command::pin_state(firmata::pin& pin, int state)
 {
-    pin.change_state(state);
+    pin.state(state);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -161,7 +161,7 @@ void command::query_state(firmata::pins& pins, const msec& time)
             auto state = to_value(data.begin() + 2, data.end());
 
             pin.mode_ = mode;
-            pin.change_state(state);
+            pin.state(state);
         }
     }
 }

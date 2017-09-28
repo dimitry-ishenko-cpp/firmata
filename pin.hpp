@@ -14,7 +14,7 @@
 
 #include <map>
 #include <set>
-#include <utility> // std::swap
+#include <utility>
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace firmata
@@ -24,82 +24,97 @@ namespace firmata
 class command;
 
 ////////////////////////////////////////////////////////////////////////////////
+// Firmata pin
+//
 class pin
 {
 public:
     ////////////////////
     pin() noexcept = default;
     pin(const pin&) = delete;
-    pin(pin&& other) noexcept { swap(other); }
+    pin(pin&& rhs) noexcept { swap(rhs); }
 
     pin& operator=(const pin&) = delete;
-    pin& operator=(pin&& other) noexcept { swap(other); return *this; }
+    pin& operator=(pin&& rhs) noexcept { swap(rhs); return *this; }
 
-    void swap(pin& other) noexcept
+    void swap(pin& rhs) noexcept
     {
         using std::swap;
-        swap(pos_,     other.pos_    );
-        swap(analog_,  other.analog_ );
-        swap(modes_,   other.modes_  );
-        swap(reses_,   other.reses_  );
-        swap(cmd_,     other.cmd_    );
-        swap(mode_,    other.mode_   );
-        swap(value_,   other.value_  );
-        swap(state_,   other.state_  );
-        swap(changed_, other.changed_);
-        swap(low_,     other.low_    );
-        swap(high_,    other.high_   );
+        swap(pos_,     rhs.pos_    );
+        swap(analog_,  rhs.analog_ );
+        swap(modes_,   rhs.modes_  );
+        swap(reses_,   rhs.reses_  );
+        swap(cmd_,     rhs.cmd_    );
+        swap(mode_,    rhs.mode_   );
+        swap(value_,   rhs.value_  );
+        swap(state_,   rhs.state_  );
+        swap(changed_, rhs.changed_);
+        swap(low_,     rhs.low_    );
+        swap(high_,    rhs.high_   );
     }
 
     ////////////////////
+    // pin position (number)
     auto pos() const noexcept { return pos_; }
+    // analong position
     auto analog() const noexcept { return analog_; }
 
+    // supported modes
     auto const& modes() const noexcept { return modes_; }
     bool supports(firmata::mode mode) const noexcept { return modes_.count(mode); }
 
+    // current mode
     auto mode() const noexcept { return mode_; }
+    // set new mode
     void mode(firmata::mode);
 
+    // current mode res (in bits)
     auto res() const noexcept { return reses_.at(mode_); }
 
+    // current value
     auto value() const noexcept { return value_; }
+    // set new value
     void value(int);
 
+    // current state
     auto state() const noexcept { return state_; }
 
     ////////////////////
-    using int_callback = call<void(int)>;
-    using void_callback = call<void()>;
+    using int_call = call<void(int)>;
+    using void_call = call<void()>;
 
-    cid on_state_changed(int_callback);
-    cid on_state_low(void_callback);
-    cid on_state_high(void_callback);
+    // install state changed/low/high callback
+    cid on_state_changed(int_call);
+    cid on_state_low(void_call);
+    cid on_state_high(void_call);
 
-    void remove_callback(cid);
+    // remove callback
+    void remove_call(cid);
 
 private:
     ////////////////////
     firmata::pos pos_ = npos, analog_ = npos;
 
     std::set<firmata::mode> modes_;
-    // resolution for each mode
-    std::map<firmata::mode, firmata::res> reses_;
+    std::map<firmata::mode, firmata::res> reses_; // res (bits) for each mode
 
+    // pointer to command for setting new mode/value
     command* cmd_ = nullptr;
 
-    firmata::mode mode_;
-    int value_ = 0;
+    firmata::mode mode_; // current mode
+    int value_ = 0; // current value
+    int state_ = 0; // current state
 
-    int state_ = 0;
-    call_chain<int_callback> changed_ { 0 };
-    call_chain<void_callback> low_    { 1 };
-    call_chain<void_callback> high_   { 2 };
-    void change_state(int);
+    // state changed/low/high call chains
+    call_chain< int_call> changed_ { 0 };
+    call_chain<void_call> low_     { 1 };
+    call_chain<void_call> high_    { 2 };
+
+    // set new state
+    void state(int);
 
     ////////////////////
     pin(firmata::pos pos, command* cmd) : pos_(pos), cmd_(cmd) { }
-
     friend class command;
 };
 
