@@ -13,35 +13,38 @@
 #include "firmata/types.hpp"
 
 #include <functional>
-#include <utility> // std::move
+#include <utility>
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace firmata
 {
 
 ////////////////////////////////////////////////////////////////////////////////
-// Abstract base class for communication with Firmata host
+// Communication with Firmata host
 //
 class io_base
 {
 public:
     ////////////////////
+    // write message to host
     virtual void write(msg_id, const payload& = { }) = 0;
 
-    ////////////////////
-    using read_callback = call<void(msg_id, const payload&)>;
+    using read_call = call<void(msg_id, const payload&)>;
 
-    virtual cid on_read(read_callback fn) { return chain_.insert(std::move(fn)); }
-    virtual void remove_callback(cid id) { chain_.erase(id); }
+    // install read callback
+    virtual cid on_read(read_call fn) { return chain_.insert(std::move(fn)); }
 
-    ////////////////////
-    // block until condition or timeout
+    // remove read callback
+    virtual void remove_call(cid id) { chain_.erase(id); }
+
     using condition = std::function<bool()>;
+
+    // block until condition or timeout
     virtual bool wait_until(const condition&, const msec&) = 0;
 
 protected:
     ////////////////////
-    call_chain<read_callback> chain_;
+    call_chain<read_call> chain_;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

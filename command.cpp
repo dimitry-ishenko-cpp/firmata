@@ -202,7 +202,7 @@ payload command::wait_until(msg_id reply_id, const msec& time)
     if(!io_.wait_until([&](){ return !reply_data.empty(); }, time))
         throw timeout_error("Read timed out");
 
-    io_.remove_callback(id);
+    io_.remove_call(id);
     return reply_data;
 }
 

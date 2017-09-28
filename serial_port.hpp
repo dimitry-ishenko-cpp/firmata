@@ -63,8 +63,8 @@ public:
     ////////////////////
     virtual void write(msg_id, const payload& = { }) override;
 
-    virtual cid on_read(read_callback) override;
-    virtual void remove_callback(cid) override;
+    virtual cid on_read(read_call) override;
+    virtual void remove_call(cid) override;
 
     // block until condition
     virtual bool wait_until(const condition&, const msec&) override;
