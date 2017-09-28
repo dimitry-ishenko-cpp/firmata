@@ -42,15 +42,20 @@ public:
     control& operator=(control&&) = delete;
 
     ////////////////////
+    // protocol version
     auto const& protocol() const noexcept { return protocol_; }
+    // firmware name & version
     auto const& firmware() const noexcept { return firmware_; }
 
+    // reset host
     void reset();
 
+    // set new read timeout
     template<typename Rep, typename Period>
     static void timeout(const std::chrono::duration<Rep, Period>&);
     static void timeout(const msec& time) noexcept { time_ = time; }
 
+    // current read timeout
     static auto const& timeout() noexcept { return time_; }
 
     ////////////////////
@@ -60,25 +65,34 @@ public:
     // last string received from host
     auto const& string() const noexcept { return string_; }
 
-    using string_callback = call<void(const std::string&)>;
-    cid on_string_changed(string_callback fn) { return chain_.insert(std::move(fn)); }
+    using string_call = call<void(const std::string&)>;
+
+    // install string changed callback
+    cid on_string_changed(string_call fn) { return chain_.insert(std::move(fn)); }
+
+    // remove callback
     void remove_callback(cid id) { chain_.erase(id); }
 
     ////////////////////
+    // get all pins (for use in range-based "for" loops)
     auto& pins() noexcept { return pins_; }
     auto const& pins() const noexcept { return pins_; }
 
+    // get pin
     auto& pin(pos n) { return pins_.get(n); }
     auto const& pin(pos n) const { return pins_.get(n); }
 
+    // get analog pin
     auto& pin(analog n) { return pins_.get(analog_in, n); }
     auto const& pin(analog n) const { return pins_.get(analog_in, n); }
 
+    // get pin that supports certain mode
     auto& pin(mode m, pos n) { return pins_.get(m, n); }
     auto const& pin(mode m, pos n) const { return pins_.get(m, n); }
 
     ////////////////////
-    void info(); // for debugging
+    // print out host info (for debugging only)
+    void info();
 
 private:
     ////////////////////
@@ -93,8 +107,9 @@ private:
     firmata::pins pins_;
 
     std::string string_;
-    call_chain<string_callback> chain_;
+    call_chain<string_call> chain_;
 
+    // read messages from host
     void async_read(msg_id, const payload&);
 
     static msec time_;

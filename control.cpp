@@ -15,7 +15,7 @@ namespace firmata
 ////////////////////////////////////////////////////////////////////////////////
 using namespace std::chrono_literals;
 
-msec control::time_ = 100ms;
+msec control::time_ = 100ms; // default read timeout
 
 ////////////////////////////////////////////////////////////////////////////////
 control::control(io_base& io, bool dont_reset) : io_(io), cmd_(io)
@@ -59,6 +59,8 @@ void control::async_read(msg_id id, const payload& data)
             auto& pin = pins_.get(pos);
             if(pin.mode() == digital_in || pin.mode() == pullup_in)
             {
+                // set pin state through cmd_,
+                // since pin::state(int) is private
                 cmd_.pin_state(pin, bool(value & (1 << n)));
             }
         }
@@ -71,7 +73,11 @@ void control::async_read(msg_id id, const payload& data)
             if(pin.analog() == pos)
             {
                 if(pin.mode() == analog_in)
+                {
+                    // set pin state through cmd_,
+                    // since pin::state(int) is private
                     cmd_.pin_state(pin, to_value(data));
+                }
                 break;
             }
     }
