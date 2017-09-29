@@ -65,7 +65,6 @@ struct pins
     firmata::pin& get(mode, pos);
     const firmata::pin& get(mode, pos) const;
 
-
 private:
     ////////////////////
     std::vector<firmata::pin> pins_;
