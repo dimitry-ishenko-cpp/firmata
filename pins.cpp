@@ -27,12 +27,12 @@ const firmata::pin& pins::get(firmata::mode mode, firmata::pos pos) const
     {
         // analog pins are treated specially,
         // as they may be numbered differently
-        for(auto& pin : pins_) if(pin.analog() == pos) return pin;
+        for(auto& pin : *this) if(pin.analog() == pos) return pin;
     }
     else
     {
         // other pins don't have specific numbers
-        for(auto& pin : pins_) if(pin.supports(mode) && 0 == pos--) return pin;
+        for(auto& pin : *this) if(pin.supports(mode) && 0 == pos--) return pin;
     }
 
     throw std::out_of_range("Pin not found");
