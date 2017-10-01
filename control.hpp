@@ -28,7 +28,8 @@ namespace firmata
 ////////////////////////////////////////////////////////////////////////////////
 struct timeout_error : public std::runtime_error { using std::runtime_error::runtime_error; };
 
-enum dont_reset_t { dont_reset };
+namespace literals { enum dont_reset_t { dont_reset }; }
+using namespace literals;
 
 ////////////////////////////////////////////////////////////////////////////////
 class control
