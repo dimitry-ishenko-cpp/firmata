@@ -70,7 +70,7 @@ public:
     firmata::pin& get(mode, pos);
     const firmata::pin& get(mode, pos) const;
 
-    friend class command;
+    friend class control;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

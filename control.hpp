@@ -10,20 +10,24 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 #include "firmata/call_chain.hpp"
-#include "firmata/command.hpp"
 #include "firmata/io_base.hpp"
 #include "firmata/pins.hpp"
 #include "firmata/types.hpp"
 
 #include <algorithm>
+#include <array>
+#include <bitset>
 #include <chrono>
 #include <string>
+#include <stdexcept>
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace firmata
 {
 
 ////////////////////////////////////////////////////////////////////////////////
+struct timeout_error : public std::runtime_error { using std::runtime_error::runtime_error; };
+
 enum dont_reset_t { dont_reset };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -60,7 +64,7 @@ public:
 
     ////////////////////
     // send string to host
-    void string(const std::string& s) { cmd_.string(s); }
+    void string(const std::string& s);
 
     // last string received from host
     auto const& string() const noexcept { return string_; }
@@ -100,19 +104,59 @@ private:
 
     io_base& io_;
     cid id_;
-    command cmd_;
 
     firmata::protocol protocol_;
     firmata::firmware firmware_;
+
     firmata::pins pins_;
+    firmata::pin::delegate delegate_;
 
     std::string string_;
     call_chain<string_call> chain_;
 
+    static msec time_;
+
+    ////////////////////
+    // enable/disable reporting for a digital pin
+    void report_digital(pos, bool);
+    // enable/disable reporting for an analog pin
+    void report_analog(pos, bool);
+
+    // set digital pin value
+    void digital_value(pos, bool);
+    // set analog pin value
+    void analog_value(pos, int);
+
+    // set pin mode
+    void pin_mode(pos, mode);
+
+    // reset host
+    void reset_();
+
+    // query protocol version
+    void query_version();
+    // query firmware name & version
+    void query_firmware();
+    // query capability (pins, modes and reses)
+    void query_capability();
+    // query analog pin mapping
+    void query_analog_mapping();
+    // query current pin state
+    void query_state();
+
+    // enable reporting for all inputs
+    // and disable for all outputs
+    void set_report();
+
     // read messages from host
     void async_read(msg_id, const payload&);
 
-    static msec time_;
+    ////////////////////
+    // ports that are currently being monitored
+    std::array<std::bitset<8>, port_count> ports_;
+
+    // wait for specific message
+    payload wait_until(msg_id);
 };
 
 ////////////////////////////////////////////////////////////////////////////////

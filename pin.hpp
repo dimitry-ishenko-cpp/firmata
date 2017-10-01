@@ -21,7 +21,7 @@ namespace firmata
 {
 
 ////////////////////////////////////////////////////////////////////////////////
-class command;
+class control;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Firmata pin
@@ -40,17 +40,17 @@ public:
     void swap(pin& rhs) noexcept
     {
         using std::swap;
-        swap(pos_,     rhs.pos_    );
-        swap(analog_,  rhs.analog_ );
-        swap(modes_,   rhs.modes_  );
-        swap(reses_,   rhs.reses_  );
-        swap(cmd_,     rhs.cmd_    );
-        swap(mode_,    rhs.mode_   );
-        swap(value_,   rhs.value_  );
-        swap(state_,   rhs.state_  );
-        swap(changed_, rhs.changed_);
-        swap(low_,     rhs.low_    );
-        swap(high_,    rhs.high_   );
+        swap(pos_,      rhs.pos_     );
+        swap(analog_,   rhs.analog_  );
+        swap(modes_,    rhs.modes_   );
+        swap(reses_,    rhs.reses_   );
+        swap(delegate_, rhs.delegate_);
+        swap(mode_,     rhs.mode_    );
+        swap(value_,    rhs.value_   );
+        swap(state_,    rhs.state_   );
+        swap(changed_,  rhs.changed_ );
+        swap(low_,      rhs.low_     );
+        swap(high_,     rhs.high_    );
     }
 
     ////////////////////
@@ -98,9 +98,6 @@ private:
     std::set<firmata::mode> modes_;
     std::map<firmata::mode, firmata::res> reses_; // res (bits) for each mode
 
-    // pointer to command for setting new mode/value
-    command* cmd_ = nullptr;
-
     firmata::mode mode_; // current mode
     int value_ = 0; // current value
     int state_ = 0; // current state
@@ -114,8 +111,23 @@ private:
     void state(int);
 
     ////////////////////
-    pin(firmata::pos pos, command* cmd) : pos_(pos), cmd_(cmd) { }
-    friend class command;
+    // delegate for setting new mode/value
+    struct delegate
+    {
+        call<void(firmata::pos, bool)> report_digital;
+        call<void(firmata::pos, bool)> report_analog;
+
+        call<void(firmata::pos, bool)> digital_value;
+        call<void(firmata::pos, int)> analog_value;
+
+        call<void(firmata::pos, firmata::mode)> pin_mode;
+    };
+
+    delegate* delegate_ = nullptr;
+
+    ////////////////////
+    pin(firmata::pos pos, delegate* del) : pos_(pos), delegate_(del) { }
+    friend class control;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

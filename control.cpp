@@ -18,20 +18,27 @@ using namespace std::chrono_literals;
 msec control::time_ = 100ms; // default read timeout
 
 ////////////////////////////////////////////////////////////////////////////////
-control::control(io_base& io, bool dont_reset) : io_(io), cmd_(io)
+control::control(io_base& io, bool dont_reset) : io_(io)
 {
-    if(!dont_reset) cmd_.reset();
-
-    protocol_ = cmd_.query_version(time_);
-    firmware_ = cmd_.query_firmware(time_);
-
-    pins_ = cmd_.query_capability(time_);
-    cmd_.query_analog_mapping(pins_, time_);
-    cmd_.query_state(pins_, time_);
-
-    cmd_.set_report(pins_);
-
     using namespace std::placeholders;
+
+    delegate_.report_digital = std::bind(&control::report_digital, this, _1, _2);
+    delegate_.report_analog = std::bind(&control::report_analog, this, _1, _2);
+    delegate_.digital_value = std::bind(&control::digital_value, this, _1, _2);
+    delegate_.analog_value = std::bind(&control::analog_value, this, _1, _2);
+    delegate_.pin_mode = std::bind(&control::pin_mode, this, _1, _2);
+
+    if(!dont_reset) reset_();
+
+    query_version();
+    query_firmware();
+
+    query_capability();
+    query_analog_mapping();
+    query_state();
+
+    set_report();
+
     id_ = io_.on_read(std::bind(&control::async_read, this, _1, _2));
 }
 
@@ -41,9 +48,177 @@ control::~control() noexcept { io_.remove_call(id_); }
 ////////////////////////////////////////////////////////////////////////////////
 void control::reset()
 {
-    cmd_.reset();
-    cmd_.query_state(pins_, time_);
-    cmd_.set_report(pins_);
+    reset_();
+    query_state();
+    set_report();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void control::report_digital(firmata::pos pos, bool value)
+{
+    std::size_t port = pos / 8, bit = pos % 8;
+
+    if(port < ports_.size())
+    {
+        bool before = ports_[port].any();
+        ports_[port].set(bit, value);
+        bool now = ports_[port].any();
+
+        auto id = static_cast<msg_id>(report_port_base + port);
+
+        if(before && !now) io_.write(id, { false });
+        else if(!before && now) io_.write(id, { true });
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void control::report_analog(firmata::pos pos, bool value)
+{
+    if(pos != npos && pos < analog_count)
+    {
+        auto id = static_cast<msg_id>(report_analog_base + pos);
+        io_.write(id, { value });
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void control::digital_value(firmata::pos pos, bool value)
+{
+    io_.write(firmata::digital_value, { pos, value });
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void control::analog_value(firmata::pos pos, int value)
+{
+    payload data = to_data(value);
+    data.insert(data.begin(), pos);
+
+    io_.write(ext_analog_value, data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void control::pin_mode(firmata::pos pos, firmata::mode mode)
+{
+    io_.write(firmata::pin_mode, { pos, mode });
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void control::reset_() { io_.write(firmata::reset); }
+
+////////////////////////////////////////////////////////////////////////////////
+void control::string(const std::string& s)
+{
+    io_.write(string_data, to_data(s));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void control::query_version()
+{
+    io_.write(version);
+    auto data = wait_until(version);
+
+    if(data.size() == 2)
+    {
+        protocol_.major = data[0];
+        protocol_.minor = data[1];
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void control::query_firmware()
+{
+    io_.write(firmware_query);
+    auto data = wait_until(firmware_response);
+
+    if(data.size() >= 2)
+    {
+        firmware_.major = data[0];
+        firmware_.minor = data[1];
+        firmware_.name = to_string(data.begin() + 2, data.end());
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void control::query_capability()
+{
+    io_.write(capability_query);
+    auto data = wait_until(capability_response);
+
+    firmata::pos pos = 0;
+    firmata::pin pin(pos, &delegate_);
+
+    for(auto ci = data.begin(); ci < data.end(); ++ci)
+        if(*ci == 0x7f)
+        {
+            pins_.push_back(firmata::pin(++pos, &delegate_));
+
+            using std::swap;
+            swap(pin, pins_.back());
+        }
+        else
+        {
+            auto mode = static_cast<firmata::mode>(*ci);
+            auto res = static_cast<firmata::res>(*++ci);
+
+            pin.modes_.insert(mode);
+            pin.reses_.emplace(mode, res);
+        }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void control::query_analog_mapping()
+{
+    io_.write(analog_mapping_query);
+    auto data = wait_until(analog_mapping_response);
+
+    auto pi = pins_.begin();
+    for(auto ci = data.begin(); ci != data.end() && pi != pins_.end(); ++ci, ++pi)
+        if(*ci != 0x7f) pi->analog_ = *ci;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void control::query_state()
+{
+    for(auto& pin : pins_)
+    {
+        io_.write(pin_state_query, { pin.pos() });
+        auto data = wait_until(pin_state_response);
+
+        if(data.size() >= 3 && data[0] == pin.pos())
+        {
+            auto mode = static_cast<firmata::mode>(data[1]);
+            auto state = to_value(data.begin() + 2, data.end());
+
+            pin.mode_ = mode;
+            pin.state(state);
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void control::set_report()
+{
+    // enable reporting for all inputs
+    // and disable for all outputs
+    for(auto& pin : pins_)
+        switch(pin.mode())
+        {
+        case digital_in:
+        case pullup_in:
+            report_digital(pin.pos(), true);
+            break;
+
+        case digital_out:
+        case pwm:
+            report_digital(pin.pos(), false);
+            break;
+
+        case analog_in:
+            report_analog(pin.analog(), true);
+            break;
+
+        default: break;
+        }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -61,7 +236,7 @@ void control::async_read(msg_id id, const payload& data)
             {
                 // set pin state through cmd_,
                 // since pin::state(int) is private
-                cmd_.pin_state(pin, bool(value & (1 << n)));
+                pin.state(bool(value & (1 << n)));
             }
         }
     }
@@ -76,7 +251,7 @@ void control::async_read(msg_id id, const payload& data)
                 {
                     // set pin state through cmd_,
                     // since pin::state(int) is private
-                    cmd_.pin_state(pin, to_value(data));
+                    pin.state(to_value(data));
                 }
                 break;
             }
@@ -86,6 +261,24 @@ void control::async_read(msg_id id, const payload& data)
         std::string s = to_string(data);
         if(string_ != s) chain_(string_ = std::move(s));
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+payload control::wait_until(msg_id reply_id)
+{
+    payload reply_data;
+    auto id = io_.on_read([&](msg_id id, const payload& data)
+        { if(id == reply_id) reply_data = data; }
+    );
+
+    if(!io_.wait_until([&](){ return reply_data.size(); }, time_))
+    {
+        io_.remove_call(id);
+        throw timeout_error("Read timed out");
+    }
+
+    io_.remove_call(id);
+    return reply_data;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
