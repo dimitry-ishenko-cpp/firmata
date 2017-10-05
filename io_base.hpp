@@ -35,7 +35,7 @@ public:
     virtual cid on_read(read_call fn) { return chain_.insert(std::move(fn)); }
 
     // remove read callback
-    virtual void remove_call(cid id) { chain_.erase(id); }
+    virtual bool remove_call(cid id) { return chain_.erase(id); }
 
     using condition = std::function<bool()>;
 

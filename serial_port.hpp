@@ -70,7 +70,7 @@ public:
     virtual cid on_read(read_call) override;
 
     // remove read callback
-    virtual void remove_call(cid) override;
+    virtual bool remove_call(cid) override;
 
     // block until condition
     virtual bool wait_until(const condition&, const msec&) override;

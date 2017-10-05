@@ -57,10 +57,11 @@ cid serial_port::on_read(read_call fn)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void serial_port::remove_call(cid id)
+bool serial_port::remove_call(cid id)
 {
-    io_base::remove_call(id);
+    auto value = io_base::remove_call(id);
     if(chain_.empty()) { port_.cancel(); timer_.cancel(); }
+    return value;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
