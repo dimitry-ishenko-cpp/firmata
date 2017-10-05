@@ -37,21 +37,7 @@ public:
     pin& operator=(const pin&) = delete;
     pin& operator=(pin&& rhs) noexcept { swap(rhs); return *this; }
 
-    void swap(pin& rhs) noexcept
-    {
-        using std::swap;
-        swap(pos_,      rhs.pos_     );
-        swap(analog_,   rhs.analog_  );
-        swap(modes_,    rhs.modes_   );
-        swap(reses_,    rhs.reses_   );
-        swap(delegate_, rhs.delegate_);
-        swap(mode_,     rhs.mode_    );
-        swap(value_,    rhs.value_   );
-        swap(state_,    rhs.state_   );
-        swap(changed_,  rhs.changed_ );
-        swap(low_,      rhs.low_     );
-        swap(high_,     rhs.high_    );
-    }
+    void swap(pin&) noexcept;
 
     ////////////////////
     // pin position (number)
