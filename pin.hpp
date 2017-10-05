@@ -89,7 +89,7 @@ public:
     cid on_state_high(void_call);
 
     // remove callback
-    void remove_call(cid);
+    bool remove_call(cid);
 
 private:
     ////////////////////

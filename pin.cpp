@@ -55,9 +55,9 @@ cid pin::on_state_changed(int_call fn) { return changed_.insert(std::move(fn)); 
 cid pin::on_state_low(void_call fn) { return low_.insert(std::move(fn)); }
 cid pin::on_state_high(void_call fn) { return high_.insert(std::move(fn)); }
 
-void pin::remove_call(cid id)
+bool pin::remove_call(cid id)
 {
-    changed_.erase(id) || low_.erase(id) || high_.erase(id);
+    return changed_.erase(id) || low_.erase(id) || high_.erase(id);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
