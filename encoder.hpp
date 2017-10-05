@@ -21,14 +21,17 @@ class encoder
 {
 public:
     ////////////////////
+    encoder() = default;
     encoder(pin&, pin&);
     ~encoder();
 
     encoder(const encoder&) = delete;
-    encoder(encoder&&) = delete;
+    encoder(encoder&& rhs) noexcept { swap(rhs); }
 
     encoder& operator=(const encoder&) = delete;
-    encoder& operator=(encoder&&) = delete;
+    encoder& operator=(encoder&& rhs) noexcept { swap(rhs); return *this; }
+
+    void swap(encoder&) noexcept;
 
     ////////////////////
     using int_call = call<void(int)>;
@@ -44,7 +47,7 @@ public:
 
 private:
     ////////////////////
-    pin& pin1_; pin& pin2_; cid id_;
+    pin* pin1_ = nullptr; pin* pin2_ = nullptr; cid id_;
 
     // rotate call chains
     call_chain< int_call> rotate_     { 0 };
