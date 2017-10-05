@@ -9,7 +9,6 @@
 
 #include <functional>
 #include <stdexcept>
-#include <utility>
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace firmata
@@ -18,9 +17,11 @@ namespace firmata
 ////////////////////////////////////////////////////////////////////////////////
 cid debounce::on_state_changed(firmata::pin& pin, pin::int_call fn)
 {
+    if(!io_) throw std::logic_error("Invalid state");
+
     cid id(0, id_++);
     chain_.emplace(id, std::unique_ptr<bounce>
-        { new bounce(io_, time_, pin, std::move(fn)) }
+        { new bounce(*io_, time_, pin, std::move(fn)) }
     );
     return id;
 }
@@ -38,7 +39,7 @@ cid debounce::on_state_high(firmata::pin& pin, pin::void_call fn)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-debounce::bounce::bounce(asio::io_service& io, msec& time, firmata::pin& pin, pin::int_call fn) :
+debounce::bounce::bounce(asio::io_service& io, const msec& time, firmata::pin& pin, pin::int_call fn) :
     pin_(pin), state_(pin_.state()), time_(time), timer_(io), fn_(std::move(fn))
 {
     if(pin_.mode() == digital_in || pin_.mode() == pullup_in)

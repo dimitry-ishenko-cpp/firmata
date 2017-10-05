@@ -16,6 +16,7 @@
 #include <chrono>
 #include <map>
 #include <memory>
+#include <utility>
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace firmata
@@ -28,20 +29,31 @@ class debounce
 {
 public:
     ////////////////////
+    debounce() noexcept = default;
+
     template<typename Rep, typename Period>
     debounce(asio::io_service& io, const std::chrono::duration<Rep, Period>& time) :
         debounce(io, std::chrono::duration_cast<msec>(time))
     { }
 
     explicit debounce(asio::io_service& io, const msec& time = msec(5)) :
-        io_(io), time_(time)
+        io_(&io), time_(time)
     { }
 
     debounce(const debounce&) = delete;
-    debounce(debounce&&) = delete;
+    debounce(debounce&& rhs) noexcept { swap(rhs); }
 
     debounce& operator=(const debounce&) = delete;
-    debounce& operator=(debounce&&) = delete;
+    debounce& operator=(debounce&& rhs) noexcept { swap(rhs); return *this; }
+
+    void swap(debounce& rhs) noexcept
+    {
+        using std::swap;
+        swap(io_   , rhs.io_   );
+        swap(time_ , rhs.time_ );
+        swap(chain_, rhs.chain_);
+        swap(id_   , rhs.id_   );
+   }
 
     ////////////////////
     // install state changed/low/high callback
@@ -54,13 +66,13 @@ public:
 
 private:
     ////////////////////
-    asio::io_service& io_;
+    asio::io_service* io_ = nullptr;
     msec time_;
 
     struct bounce
     {
         ////////////////////
-        bounce(asio::io_service&, msec&, pin&, pin::int_call);
+        bounce(asio::io_service&, const msec&, pin&, pin::int_call);
         ~bounce() noexcept;
 
     private:
@@ -77,6 +89,9 @@ private:
     std::map<cid, std::unique_ptr<bounce>> chain_;
     int id_ = 0;
 };
+
+////////////////////////////////////////////////////////////////////////////////
+inline void swap(debounce& lhs, debounce& rhs) noexcept { lhs.swap(rhs); }
 
 ////////////////////////////////////////////////////////////////////////////////
 }
