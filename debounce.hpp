@@ -50,7 +50,7 @@ public:
     cid on_state_high(pin&, pin::void_call);
 
     // remove callback
-    void remove_call(cid);
+    bool remove_call(cid id) { return chain_.erase(id); }
 
 private:
     ////////////////////
