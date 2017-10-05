@@ -20,6 +20,7 @@
 #include <chrono>
 #include <string>
 #include <stdexcept>
+#include <utility>
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace firmata
@@ -36,15 +37,18 @@ class control
 {
 public:
     ////////////////////
-    explicit control(io_base& io) : control(io, false) { }
-    control(io_base& io, dont_reset_t) : control(io, true) { }
+    control() = default;
+    explicit control(io_base& io) : control(&io, false) { }
+    control(io_base& io, dont_reset_t) : control(&io, true) { }
     ~control() noexcept;
 
     control(const control&) = delete;
-    control(control&&) = delete;
+    control(control&& rhs) noexcept { swap(rhs); }
 
     control& operator=(const control&) = delete;
-    control& operator=(control&&) = delete;
+    control& operator=(control&& rhs) noexcept { swap(rhs); return *this; }
+
+    void swap(control&) noexcept;
 
     ////////////////////
     // protocol version
@@ -101,13 +105,13 @@ public:
 
 private:
     ////////////////////
-    control(io_base&, bool dont_reset);
+    control(io_base*, bool dont_reset);
 
-    io_base& io_;
+    io_base* io_ = nullptr;
     cid id_;
 
-    firmata::protocol protocol_;
-    firmata::firmware firmware_;
+    firmata::protocol protocol_ { 0, 0 };
+    firmata::firmware firmware_ { 0, 0 };
 
     firmata::pins pins_;
     firmata::pin::delegate delegate_;
@@ -165,6 +169,9 @@ template<typename Rep, typename Period>
 inline void
 control::timeout(const std::chrono::duration<Rep, Period>& time)
 { timeout(std::chrono::duration_cast<msec>(time)); }
+
+////////////////////////////////////////////////////////////////////////////////
+inline void swap(control& lhs, control& rhs) noexcept { lhs.swap(rhs); }
 
 ////////////////////////////////////////////////////////////////////////////////
 }

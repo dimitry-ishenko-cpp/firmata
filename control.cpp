@@ -6,7 +6,9 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 #include "firmata/control.hpp"
+
 #include <iostream>
+#include <stdexcept>
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace firmata
@@ -18,7 +20,7 @@ using namespace std::chrono_literals;
 msec control::time_ = 100ms; // default read timeout
 
 ////////////////////////////////////////////////////////////////////////////////
-control::control(io_base& io, bool dont_reset) : io_(io)
+control::control(io_base* io, bool dont_reset) : io_(io)
 {
     using namespace std::placeholders;
 
@@ -39,15 +41,45 @@ control::control(io_base& io, bool dont_reset) : io_(io)
 
     set_report();
 
-    id_ = io_.on_read(std::bind(&control::async_read, this, _1, _2));
+    id_ = io_->on_read(std::bind(&control::async_read, this, _1, _2));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-control::~control() noexcept { io_.remove_call(id_); }
+control::~control() noexcept { if(io_) io_->remove_call(id_); }
+
+////////////////////////////////////////////////////////////////////////////////
+void control::swap(control& rhs) noexcept
+{
+    using namespace std::placeholders;
+    using std::swap;
+
+    swap(io_, rhs.io_);
+    swap(id_, rhs.id_);
+    if(io_)
+    {
+        io_->remove_call(id_);
+        id_ = io_->on_read(std::bind(&control::async_read, this, _1, _2));
+    }
+    if(rhs.io_)
+    {
+        rhs.io_->remove_call(rhs.id_);
+        rhs.id_ = rhs.io_->on_read(std::bind(&control::async_read, &rhs, _1, _2));
+    }
+    swap(protocol_, rhs.protocol_);
+    swap(firmware_, rhs.firmware_);
+    swap(pins_    , rhs.pins_    );
+    for(auto& pin: pins_) pin.delegate_ = &delegate_;
+    for(auto& pin: rhs.pins_) pin.delegate_ = &rhs.delegate_;
+    swap(string_  , rhs.string_  );
+    swap(chain_   , rhs.chain_   );
+    swap(ports_   , rhs.ports_   );
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 void control::reset()
 {
+    if(!io_) throw std::logic_error("Invalid state");
+
     reset_();
     query_state();
     set_report();
@@ -66,8 +98,8 @@ void control::report_digital(firmata::pos pos, bool value)
 
         auto id = static_cast<msg_id>(report_port_base + port);
 
-        if(before && !now) io_.write(id, { false });
-        else if(!before && now) io_.write(id, { true });
+        if(before && !now) io_->write(id, { false });
+        else if(!before && now) io_->write(id, { true });
     }
 }
 
@@ -77,14 +109,14 @@ void control::report_analog(firmata::pos pos, bool value)
     if(pos != npos && pos < analog_count)
     {
         auto id = static_cast<msg_id>(report_analog_base + pos);
-        io_.write(id, { value });
+        io_->write(id, { value });
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void control::digital_value(firmata::pos pos, bool value)
 {
-    io_.write(firmata::digital_value, { pos, value });
+    io_->write(firmata::digital_value, { pos, value });
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -93,28 +125,29 @@ void control::analog_value(firmata::pos pos, int value)
     payload data = to_data(value);
     data.insert(data.begin(), pos);
 
-    io_.write(ext_analog_value, data);
+    io_->write(ext_analog_value, data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void control::pin_mode(firmata::pos pos, firmata::mode mode)
 {
-    io_.write(firmata::pin_mode, { pos, mode });
+    io_->write(firmata::pin_mode, { pos, mode });
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::reset_() { io_.write(firmata::reset); }
+void control::reset_() { io_->write(firmata::reset); }
 
 ////////////////////////////////////////////////////////////////////////////////
 void control::string(const std::string& s)
 {
-    io_.write(string_data, to_data(s));
+    if(!io_) throw std::logic_error("Invalid state");
+    io_->write(string_data, to_data(s));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void control::query_version()
 {
-    io_.write(version);
+    io_->write(version);
     auto data = wait_until(version);
 
     if(data.size() == 2)
@@ -127,7 +160,7 @@ void control::query_version()
 ////////////////////////////////////////////////////////////////////////////////
 void control::query_firmware()
 {
-    io_.write(firmware_query);
+    io_->write(firmware_query);
     auto data = wait_until(firmware_response);
 
     if(data.size() >= 2)
@@ -141,7 +174,7 @@ void control::query_firmware()
 ////////////////////////////////////////////////////////////////////////////////
 void control::query_capability()
 {
-    io_.write(capability_query);
+    io_->write(capability_query);
     auto data = wait_until(capability_response);
 
     firmata::pos pos = 0;
@@ -168,7 +201,7 @@ void control::query_capability()
 ////////////////////////////////////////////////////////////////////////////////
 void control::query_analog_mapping()
 {
-    io_.write(analog_mapping_query);
+    io_->write(analog_mapping_query);
     auto data = wait_until(analog_mapping_response);
 
     auto pi = pins_.begin();
@@ -181,7 +214,7 @@ void control::query_state()
 {
     for(auto& pin : pins_)
     {
-        io_.write(pin_state_query, { pin.pos() });
+        io_->write(pin_state_query, { pin.pos() });
         auto data = wait_until(pin_state_response);
 
         if(data.size() >= 3 && data[0] == pin.pos())
@@ -267,17 +300,17 @@ void control::async_read(msg_id id, const payload& data)
 payload control::wait_until(msg_id reply_id)
 {
     payload reply_data;
-    auto id = io_.on_read([&](msg_id id, const payload& data)
+    auto id = io_->on_read([&](msg_id id, const payload& data)
         { if(id == reply_id) reply_data = data; }
     );
 
-    if(!io_.wait_until([&](){ return reply_data.size(); }, time_))
+    if(!io_->wait_until([&](){ return reply_data.size(); }, time_))
     {
-        io_.remove_call(id);
+        io_->remove_call(id);
         throw timeout_error("Read timed out");
     }
 
-    io_.remove_call(id);
+    io_->remove_call(id);
     return reply_data;
 }
 
