@@ -33,6 +33,12 @@ struct call_chain
     ////////////////////
     call_chain(unsigned token = 0) noexcept : token_(token), id_(0) { }
 
+    call_chain(const call_chain&) = delete;
+    call_chain(call_chain&&) noexcept = default;
+
+    call_chain& operator=(const call_chain&) = delete;
+    call_chain& operator=(call_chain&&) noexcept = default;
+
     ////////////////////
     auto insert(Fn fn)
     {
