@@ -40,7 +40,7 @@ public:
     cid on_rotate_ccw(void_call);
 
     // remove callback
-    void remove_call(cid);
+    bool remove_call(cid);
 
 private:
     ////////////////////

@@ -35,9 +35,9 @@ cid encoder::on_rotate(int_call fn) { return rotate_.insert(std::move(fn)); }
 cid encoder::on_rotate_cw(void_call fn) { return rotate_cw_.insert(std::move(fn)); }
 cid encoder::on_rotate_ccw(void_call fn) { return rotate_ccw_.insert(std::move(fn)); }
 
-void encoder::remove_call(cid id)
+bool encoder::remove_call(cid id)
 {
-    rotate_.erase(id) || rotate_cw_.erase(id) || rotate_ccw_.erase(id);
+    return rotate_.erase(id) || rotate_cw_.erase(id) || rotate_ccw_.erase(id);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
