@@ -76,7 +76,7 @@ public:
     cid on_string_changed(string_call fn) { return chain_.insert(std::move(fn)); }
 
     // remove callback
-    void remove_callback(cid id) { chain_.erase(id); }
+    void remove_call(cid id) { chain_.erase(id); }
 
     ////////////////////
     // get all pins (for use in range-based "for" loops)
