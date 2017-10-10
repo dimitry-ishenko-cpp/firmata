@@ -34,6 +34,10 @@ public:
     void swap(encoder&) noexcept;
 
     ////////////////////
+    bool valid() const noexcept { return pin1_; }
+    explicit operator bool() const noexcept { return valid(); }
+
+    ////////////////////
     using int_call = call<void(int)>;
     using void_call = call<void()>;
 

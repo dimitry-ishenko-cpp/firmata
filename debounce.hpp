@@ -56,6 +56,10 @@ public:
    }
 
     ////////////////////
+    bool valid() const noexcept { return io_; }
+    explicit operator bool() const noexcept { return valid(); }
+
+    ////////////////////
     // install state changed/low/high callback
     cid on_state_changed(pin&, pin::int_call);
     cid on_state_low(pin&, pin::void_call);

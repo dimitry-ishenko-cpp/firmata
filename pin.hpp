@@ -40,6 +40,10 @@ public:
     void swap(pin&) noexcept;
 
     ////////////////////
+    bool valid() const noexcept { return pos_ != npos; }
+    explicit operator bool() const noexcept { return valid(); }
+
+    ////////////////////
     // pin position (number)
     auto pos() const noexcept { return pos_; }
     // analong position

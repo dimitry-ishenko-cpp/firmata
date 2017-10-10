@@ -51,6 +51,10 @@ public:
     void swap(control&) noexcept;
 
     ////////////////////
+    bool valid() const noexcept { return io_; }
+    explicit operator bool() const noexcept { return valid(); }
+
+    ////////////////////
     // protocol version
     auto const& protocol() const noexcept { return protocol_; }
     // firmware name & version
