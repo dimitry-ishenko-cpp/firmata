@@ -112,11 +112,13 @@ void serial_port::async_read(const asio::error_code& ec, std::size_t n)
     msg_id id;
     payload data;
 
-    goto parse;
+    // parse messages until none left
+    std::tie(id, data) = parse_one();
+
     while(data.size())
     {
         chain_(id, data);
-parse:  std::tie(id, data) = parse_one();
+        std::tie(id, data) = parse_one();
     }
 
     sched_async();

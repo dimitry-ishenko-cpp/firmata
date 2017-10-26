@@ -40,7 +40,7 @@ using char_size = bits;
 using namespace literals;
 
 ////////////////////////////////////////////////////////////////////////////////
-// Communication with Firmata host via serial port
+// Firmata protocol I/O via serial port
 //
 class serial_port : public io_base
 {
@@ -63,7 +63,7 @@ public:
     void set(char_size);
 
     ////////////////////
-    // write message to host
+    // write message
     virtual void write(msg_id, const payload& = { }) override;
 
     // install read callback
