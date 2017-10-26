@@ -32,7 +32,7 @@ asio::io_service io;
 firmata::serial_port device(io, "/dev/ttyACM0");
 device.set(57600_baud);
 
-firmata::control arduino(device);
+firmata::client arduino(device);
 
 for(auto& pin : arduino.pins())
 {

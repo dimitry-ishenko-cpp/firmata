@@ -5,8 +5,8 @@
 // Distributed under the GNU GPL license. See the LICENSE.md file for details.
 
 ////////////////////////////////////////////////////////////////////////////////
-#ifndef FIRMATA_CONTROL_HPP
-#define FIRMATA_CONTROL_HPP
+#ifndef FIRMATA_CLIENT_HPP
+#define FIRMATA_CLIENT_HPP
 
 ////////////////////////////////////////////////////////////////////////////////
 #include "firmata/call_chain.hpp"
@@ -33,22 +33,22 @@ namespace literals { enum dont_reset_t { dont_reset }; }
 using namespace literals;
 
 ////////////////////////////////////////////////////////////////////////////////
-class control
+class client
 {
 public:
     ////////////////////
-    control() = default;
-    explicit control(io_base& io) : control(&io, false) { }
-    control(io_base& io, dont_reset_t) : control(&io, true) { }
-    ~control() noexcept;
+    client() = default;
+    explicit client(io_base& io) : client(&io, false) { }
+    client(io_base& io, dont_reset_t) : client(&io, true) { }
+    ~client() noexcept;
 
-    control(const control&) = delete;
-    control(control&& rhs) noexcept { swap(rhs); }
+    client(const client&) = delete;
+    client(client&& rhs) noexcept { swap(rhs); }
 
-    control& operator=(const control&) = delete;
-    control& operator=(control&& rhs) noexcept { swap(rhs); return *this; }
+    client& operator=(const client&) = delete;
+    client& operator=(client&& rhs) noexcept { swap(rhs); return *this; }
 
-    void swap(control&) noexcept;
+    void swap(client&) noexcept;
 
     ////////////////////
     bool valid() const noexcept { return io_; }
@@ -109,7 +109,7 @@ public:
 
 private:
     ////////////////////
-    control(io_base*, bool dont_reset);
+    client(io_base*, bool dont_reset);
 
     io_base* io_ = nullptr;
     cid id_;
@@ -171,11 +171,11 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 template<typename Rep, typename Period>
 inline void
-control::timeout(const std::chrono::duration<Rep, Period>& time)
+client::timeout(const std::chrono::duration<Rep, Period>& time)
 { timeout(std::chrono::duration_cast<msec>(time)); }
 
 ////////////////////////////////////////////////////////////////////////////////
-inline void swap(control& lhs, control& rhs) noexcept { lhs.swap(rhs); }
+inline void swap(client& lhs, client& rhs) noexcept { lhs.swap(rhs); }
 
 ////////////////////////////////////////////////////////////////////////////////
 }

@@ -5,7 +5,7 @@
 // Distributed under the GNU GPL license. See the LICENSE.md file for details.
 
 ////////////////////////////////////////////////////////////////////////////////
-#include "firmata/control.hpp"
+#include "firmata/client.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -17,18 +17,18 @@ namespace firmata
 ////////////////////////////////////////////////////////////////////////////////
 using namespace std::chrono_literals;
 
-msec control::time_ = 100ms; // default read timeout
+msec client::time_ = 100ms; // default read timeout
 
 ////////////////////////////////////////////////////////////////////////////////
-control::control(io_base* io, bool dont_reset) : io_(io)
+client::client(io_base* io, bool dont_reset) : io_(io)
 {
     using namespace std::placeholders;
 
-    delegate_.report_digital = std::bind(&control::report_digital, this, _1, _2);
-    delegate_.report_analog = std::bind(&control::report_analog, this, _1, _2);
-    delegate_.digital_value = std::bind(&control::digital_value, this, _1, _2);
-    delegate_.analog_value = std::bind(&control::analog_value, this, _1, _2);
-    delegate_.pin_mode = std::bind(&control::pin_mode, this, _1, _2);
+    delegate_.report_digital = std::bind(&client::report_digital, this, _1, _2);
+    delegate_.report_analog = std::bind(&client::report_analog, this, _1, _2);
+    delegate_.digital_value = std::bind(&client::digital_value, this, _1, _2);
+    delegate_.analog_value = std::bind(&client::analog_value, this, _1, _2);
+    delegate_.pin_mode = std::bind(&client::pin_mode, this, _1, _2);
 
     if(!dont_reset) reset_();
 
@@ -41,14 +41,14 @@ control::control(io_base* io, bool dont_reset) : io_(io)
 
     set_report();
 
-    id_ = io_->on_read(std::bind(&control::async_read, this, _1, _2));
+    id_ = io_->on_read(std::bind(&client::async_read, this, _1, _2));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-control::~control() noexcept { if(io_) io_->remove_call(id_); }
+client::~client() noexcept { if(io_) io_->remove_call(id_); }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::swap(control& rhs) noexcept
+void client::swap(client& rhs) noexcept
 {
     using namespace std::placeholders;
     using std::swap;
@@ -58,12 +58,12 @@ void control::swap(control& rhs) noexcept
     if(io_)
     {
         io_->remove_call(id_);
-        id_ = io_->on_read(std::bind(&control::async_read, this, _1, _2));
+        id_ = io_->on_read(std::bind(&client::async_read, this, _1, _2));
     }
     if(rhs.io_)
     {
         rhs.io_->remove_call(rhs.id_);
-        rhs.id_ = rhs.io_->on_read(std::bind(&control::async_read, &rhs, _1, _2));
+        rhs.id_ = rhs.io_->on_read(std::bind(&client::async_read, &rhs, _1, _2));
     }
     swap(protocol_, rhs.protocol_);
     swap(firmware_, rhs.firmware_);
@@ -76,7 +76,7 @@ void control::swap(control& rhs) noexcept
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::reset()
+void client::reset()
 {
     if(!io_) throw std::logic_error("Invalid state");
 
@@ -86,7 +86,7 @@ void control::reset()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::report_digital(firmata::pos pos, bool value)
+void client::report_digital(firmata::pos pos, bool value)
 {
     std::size_t port = pos / 8, bit = pos % 8;
 
@@ -104,7 +104,7 @@ void control::report_digital(firmata::pos pos, bool value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::report_analog(firmata::pos pos, bool value)
+void client::report_analog(firmata::pos pos, bool value)
 {
     if(pos != npos && pos < analog_count)
     {
@@ -114,13 +114,13 @@ void control::report_analog(firmata::pos pos, bool value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::digital_value(firmata::pos pos, bool value)
+void client::digital_value(firmata::pos pos, bool value)
 {
     io_->write(firmata::digital_value, { pos, value });
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::analog_value(firmata::pos pos, int value)
+void client::analog_value(firmata::pos pos, int value)
 {
     payload data = to_data(value);
     data.insert(data.begin(), pos);
@@ -129,23 +129,23 @@ void control::analog_value(firmata::pos pos, int value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::pin_mode(firmata::pos pos, firmata::mode mode)
+void client::pin_mode(firmata::pos pos, firmata::mode mode)
 {
     io_->write(firmata::pin_mode, { pos, mode });
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::reset_() { io_->write(firmata::reset); }
+void client::reset_() { io_->write(firmata::reset); }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::string(const std::string& s)
+void client::string(const std::string& s)
 {
     if(!io_) throw std::logic_error("Invalid state");
     io_->write(string_data, to_data(s));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::query_version()
+void client::query_version()
 {
     io_->write(version);
     auto data = wait_until(version);
@@ -158,7 +158,7 @@ void control::query_version()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::query_firmware()
+void client::query_firmware()
 {
     io_->write(firmware_query);
     auto data = wait_until(firmware_response);
@@ -172,7 +172,7 @@ void control::query_firmware()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::query_capability()
+void client::query_capability()
 {
     io_->write(capability_query);
     auto data = wait_until(capability_response);
@@ -199,7 +199,7 @@ void control::query_capability()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::query_analog_mapping()
+void client::query_analog_mapping()
 {
     io_->write(analog_mapping_query);
     auto data = wait_until(analog_mapping_response);
@@ -210,7 +210,7 @@ void control::query_analog_mapping()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::query_state()
+void client::query_state()
 {
     for(auto& pin : pins_)
     {
@@ -229,7 +229,7 @@ void control::query_state()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::set_report()
+void client::set_report()
 {
     // enable reporting for all inputs
     // and disable for all outputs
@@ -255,7 +255,7 @@ void control::set_report()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::async_read(msg_id id, const payload& data)
+void client::async_read(msg_id id, const payload& data)
 {
     if(id >= port_value_base && id < port_value_end)
     {
@@ -297,7 +297,7 @@ void control::async_read(msg_id id, const payload& data)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-payload control::wait_until(msg_id reply_id)
+payload client::wait_until(msg_id reply_id)
 {
     payload reply_data;
     auto id = io_->on_read([&](msg_id id, const payload& data)
@@ -341,7 +341,7 @@ auto to_string(firmata::mode mode)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void control::info()
+void client::info()
 {
     using namespace std;
 
