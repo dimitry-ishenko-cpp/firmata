@@ -20,13 +20,13 @@ namespace firmata
 {
 
 ////////////////////////////////////////////////////////////////////////////////
-// Communication with Firmata host
+// Firmata protocol I/O base class
 //
 class io_base
 {
 public:
     ////////////////////
-    // write message to host
+    // write message
     virtual void write(msg_id, const payload& = { }) = 0;
 
     using read_call = call<void(msg_id, const payload&)>;
